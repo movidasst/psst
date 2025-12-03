@@ -416,6 +416,28 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
         }
+
+        /* MODO PDF: mejora específica solo cuando se genera el PDF */
+        body.pdf-mode {
+            background: #ffffff;
+        }
+        body.pdf-mode .paper-container {
+            background: #ffffff;
+            padding: 0;
+        }
+        body.pdf-mode .paper-sheet {
+            box-shadow: none;
+            margin: 0 auto;
+            border-radius: 0;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 15mm 18mm 15mm; /* Márgenes internos para PDF */
+        }
+        body.pdf-mode nav.no-print,
+        body.pdf-mode #upload-zone,
+        body.pdf-mode #loader {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -878,9 +900,13 @@
                 btn.innerHTML = "<i class='ph ph-spinner animate-spin text-lg'></i> Generando...";
                 btn.disabled = true;
 
+                // Activar modo PDF para mejorar maquetación del informe
+                document.body.classList.add('pdf-mode');
+
+                const today = new Date().toISOString().slice(0,10);
                 const opt = {
-                    margin: [15, 0, 15, 0], 
-                    filename: `Dictamen_Forense_${new Date().toISOString().slice(0,10)}.pdf`,
+                    margin: [0, 0, 0, 0], 
+                    filename: `Informe_Auditoria_PSST_NT042023_${today}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 }, 
                     html2canvas: { scale: 3, useCORS: true, logging: false, scrollY: 0, letterRendering: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -888,8 +914,17 @@
                 };
                 
                 html2pdf().set(opt).from(element).save()
-                .then(() => { btn.innerHTML = oldHtml; btn.disabled = false; })
-                .catch((err) => { alert("Error al generar PDF."); btn.innerHTML = oldHtml; btn.disabled = false; });
+                .then(() => { 
+                    document.body.classList.remove('pdf-mode');
+                    btn.innerHTML = oldHtml; 
+                    btn.disabled = false; 
+                })
+                .catch((err) => { 
+                    document.body.classList.remove('pdf-mode');
+                    alert("Error al generar PDF."); 
+                    btn.innerHTML = oldHtml; 
+                    btn.disabled = false; 
+                });
             }
         };
 
