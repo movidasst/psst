@@ -416,28 +416,6 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
         }
-
-        /* MODO PDF: mejora específica solo cuando se genera el PDF */
-        body.pdf-mode {
-            background: #ffffff;
-        }
-        body.pdf-mode .paper-container {
-            background: #ffffff;
-            padding: 0;
-        }
-        body.pdf-mode .paper-sheet {
-            box-shadow: none;
-            margin: 0 auto;
-            border-radius: 0;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 15mm 18mm 15mm; /* Márgenes internos para PDF */
-        }
-        body.pdf-mode nav.no-print,
-        body.pdf-mode #upload-zone,
-        body.pdf-mode #loader {
-            display: none !important;
-        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -784,18 +762,34 @@
                     
                     TU MISIÓN: Realizar una AUDITORÍA TÉCNICA PROFUNDA Y RIGUROSA del documento PDF suministrado (Programa de Seguridad y Salud en el Trabajo - PSST), contrastándolo ESTRICTAMENTE contra la NORMA TÉCNICA NT-04-2023 y la GUÍA DE ELABORACIÓN DE PSST.
 
-                    *** INSTRUCCIÓN CRÍTICA DE SEGURIDAD ***: NO RESUMAS. NO OMITAS DETALLES. SI FALTA UN REQUISITO LEGAL, DEBES REPORTARLO COMO "NO CONFORME".
+                    *** INSTRUCCIÓN CRÍTICA DE DISEÑO ***:
+                    NO USES FORMATO MARKDOWN (ni asteriscos **, ni guiones -).
+                    DEBES GENERAR CÓDIGO HTML LIMPIO Y ESTRUCTURADO PARA CADA HALLAZGO.
+                    
+                    Usa esta estructura HTML para cada punto auditado:
+                    
+                    <div class="finding-card [CLASE_ESTADO]">
+                        <div class="finding-header">
+                            <div class="finding-title">[TÍTULO DEL PUNTO AUDITADO]</div>
+                            <span class="status-badge [CLASE_BADGE]">[ESTADO: CONFORME / NO CONFORME / PARCIAL]</span>
+                        </div>
+                        <div class="finding-body">
+                            [ANÁLISIS DETALLADO DEL HALLAZGO]
+                            <ul class="recommendation-list">
+                                <li>[RECOMENDACIÓN 1]</li>
+                                <li>[RECOMENDACIÓN 2]</li>
+                            </ul>
+                        </div>
+                    </div>
 
-                    ESTRUCTURA DEL INFORME (SALIDA HTML):
-                    Genera un reporte profesional, sobrio y técnico usando las clases CSS definidas (finding-card, score-section, etc.).
+                    Clases de estado disponibles:
+                    - Conforme: card-ok (badge: st-ok)
+                    - No Conforme: card-fail (badge: st-fail)
+                    - Parcial/Alerta: card-warn (badge: st-warn)
+                    - Ausente: card-absent (badge: st-absent)
 
                     --- SECCIÓN 1: SCORE CARD ---
-                    Calcula un % de cumplimiento basado en la rigurosidad de los hallazgos.
-                    - < 50%: ROJO (#991b1b) - CRÍTICO
-                    - 50-80%: BRONCE (#92400e) - DEFICIENTE
-                    - > 80%: VERDE (#166534) - CONFORME
-                    
-                    Genera el bloque HTML:
+                    Calcula un % de cumplimiento.
                     <div class="score-section">
                         <div class="score-circle" style="color: [COLOR]; border-color: [COLOR]">[XX]%</div>
                         <div class="score-details">
@@ -806,6 +800,7 @@
                     </div>
 
                     --- SECCIÓN 2: AUDITORÍA DETALLADA POR CAPÍTULOS (RIGOR EXTREMO) ---
+                    Genera títulos de capítulo así: <h2 class="chapter-title">CAPÍTULO I: GENERALIDADES</h2>
 
                     1. CAPÍTULO I: GENERALIDADES
                        - Verificar existencia y calidad de: Objetivos (Generales/Específicos), Alcance (población/geografía), Basamento Legal (vigente), Responsabilidades (Patrono, Servicio, CSSL, Trabajadores) y Definiciones.
@@ -900,13 +895,9 @@
                 btn.innerHTML = "<i class='ph ph-spinner animate-spin text-lg'></i> Generando...";
                 btn.disabled = true;
 
-                // Activar modo PDF para mejorar maquetación del informe
-                document.body.classList.add('pdf-mode');
-
-                const today = new Date().toISOString().slice(0,10);
                 const opt = {
-                    margin: [0, 0, 0, 0], 
-                    filename: `Informe_Auditoria_PSST_NT042023_${today}.pdf`,
+                    margin: [15, 0, 15, 0], 
+                    filename: `Dictamen_Forense_${new Date().toISOString().slice(0,10)}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 }, 
                     html2canvas: { scale: 3, useCORS: true, logging: false, scrollY: 0, letterRendering: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -914,17 +905,8 @@
                 };
                 
                 html2pdf().set(opt).from(element).save()
-                .then(() => { 
-                    document.body.classList.remove('pdf-mode');
-                    btn.innerHTML = oldHtml; 
-                    btn.disabled = false; 
-                })
-                .catch((err) => { 
-                    document.body.classList.remove('pdf-mode');
-                    alert("Error al generar PDF."); 
-                    btn.innerHTML = oldHtml; 
-                    btn.disabled = false; 
-                });
+                .then(() => { btn.innerHTML = oldHtml; btn.disabled = false; })
+                .catch((err) => { alert("Error al generar PDF."); btn.innerHTML = oldHtml; btn.disabled = false; });
             }
         };
 
