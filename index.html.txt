@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor de PSST 3.0 | NT-04-2023</title>
+    
+    <!-- LIBRERÍAS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- CONFIGURACIÓN TAILWIND -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Inter"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                        mono: ['"Fira Code"', 'monospace']
+                    },
+                    colors: {
+                        brand: { DEFAULT: '#00b050' },
+                        slate: { 850: '#1e293b' } 
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* FUENTES */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Fira+Code:wght@400&display=swap');
+
+        body { 
+            background-color: #f8fafc; 
+            color: #334155; 
+            -webkit-font-smoothing: antialiased; 
+        }
+
+        /* --- PANTALLA DE ACCESO (LOGIN) --- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 9999; /* Por encima de todo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .login-card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            border: 1px solid #f1f5f9;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .login-input:focus {
+            border-color: #00b050;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 176, 80, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #00b050;
+            color: white;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 13px;
+        }
+
+        .login-btn:hover {
+            background: #008a3e;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 176, 80, 0.2);
+        }
+
+        .login-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hidden-login {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* --- ESTILOS DE INFORME --- */
+        .print-content {
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt; 
+            line-height: 1.6; 
+            color: #334155;
+            text-align: left; 
+            letter-spacing: 0.2px; 
+        }
+
+        .print-content h1, .print-content h2, .print-content h3 {
+            font-family: 'Playfair Display', serif;
+            color: #1e293b; 
+            line-height: 1.2;
+        }
+
+        /* CABECERA */
+        .brand-header {
+            display: flex;
+            align-items: flex-end; 
+            justify-content: space-between;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0; 
+            margin-bottom: 2.5rem;
+            page-break-inside: avoid;
+        }
+
+        .brand-titles h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 22pt;
+            font-weight: 800; 
+            margin: 0;
+            color: #1e293b; 
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        
+        .brand-titles .dao-network {
+            font-family: 'Inter', sans-serif;
+            color: #00b050; 
+            font-size: 10pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 6px;
+        }
+
+        .brand-titles .doc-type {
+            font-size: 9pt;
+            color: #94a3b8; 
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .meta-box {
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 8pt;
+            color: #64748b;
+        }
+
+        /* SCORE CARD */
+        .score-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            page-break-inside: avoid;
+        }
+
+        .score-circle {
+            min-width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 20pt;
+            font-weight: 700;
+            background: #f8fafc; 
+        }
+
+        .score-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .score-verdict {
+            font-family: 'Playfair Display', serif;
+            font-size: 14pt;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .score-desc {
+            font-size: 9.5pt;
+            color: #64748b;
+        }
+
+        /* HALLAZGOS */
+        .chapter-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 13pt;
+            font-weight: 700;
+            color: #334155; 
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+        }
+        
+        .finding-card {
+            background: #fff;
+            border: 1px solid #f1f5f9; 
+            border-left-width: 3px; 
+            border-radius: 4px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        .card-ok { border-left-color: #86efac; background-color: #fafffc; } 
+        .card-fail { border-left-color: #fca5a5; background-color: #fffbfc; } 
+        .card-warn { border-left-color: #fcd34d; background-color: #ffnfef; } 
+        .card-absent { border-left-color: #cbd5e1; border-style: solid; background-color: #f8fafc; } 
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+
+        .finding-title {
+            font-weight: 600;
+            font-size: 10.5pt;
+            color: #1e293b; 
+        }
+        
+        .status-badge { 
+            font-size: 7pt; 
+            font-weight: 600; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        .st-ok { background: #dcfce7; color: #166534; } 
+        .st-fail { background: #fee2e2; color: #991b1b; } 
+        .st-warn { background: #fef3c7; color: #92400e; } 
+        .st-absent { background: #f1f5f9; color: #64748b; } 
+
+        .finding-body {
+            font-size: 9.5pt;
+            color: #475569; 
+        }
+
+        .recommendation-list { list-style: none; padding: 0; margin-top: 8px; }
+        .recommendation-list li { 
+            margin-bottom: 4px; 
+            padding-left: 14px; 
+            position: relative; 
+            color: #334155;
+            font-size: 9pt;
+        }
+        .recommendation-list li::before { 
+            content: "•"; 
+            color: #94a3b8; 
+            font-size: 12pt; 
+            position: absolute; 
+            left: 0; 
+            top: -2px; 
+        }
+
+        /* HOJA DE RUTA */
+        .roadmap-box {
+            background: #fff;
+            border: 1px solid #e2e8f0; 
+            border-top: 3px solid #cbd5e1; 
+            border-radius: 4px;
+            padding: 24px;
+            margin-top: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .roadmap-header h3 {
+            font-family: 'Playfair Display', serif;
+            color: #1e293b; 
+            font-size: 12pt; 
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .roadmap-step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            color: #64748b;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 14pt;
+            line-height: 1;
+            flex-shrink: 0;
+            width: 20px;
+        }
+        
+        .step-content {
+            font-size: 9.5pt;
+            color: #334155;
+            padding-top: 2px;
+        }
+
+        /* UTILIDADES */
+        .paper-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+            background: #e2e8f0; 
+        }
+        .paper-sheet {
+            background: white;
+            width: 210mm; 
+            min-height: 297mm;
+            padding: 20mm; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin: 0 auto;
+            position: relative;
+            box-sizing: border-box; 
+        }
+
+        @media print {
+            body { background: white; }
+            .paper-container { background: white; padding: 0; }
+            .paper-sheet { box-shadow: none; width: 100%; margin: 0; padding: 0; }
+            .no-print { display: none !important; }
+        }
+
+        .btn-whatsapp {
+            background: #25D366; color: white; font-weight: bold; padding: 8px 16px; border-radius: 8px;
+            display: flex; align-items: center; gap: 8px; transition: all 0.2s; text-decoration: none; font-size: 0.85rem;
+        }
+        
+        .gradient-btn {
+            background: #1e293b; 
+            transition: all 0.3s ease;
+        }
+        .gradient-btn:hover {
+            background: #0f172a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- PANTALLA DE ACCESO (LOGIN INTEGRADO) -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <!-- Logo solo aquí -->
+            <img src="https://assets.poap.xyz/f7d50791-1f25-47f7-978c-b2c9fd7ad13d.png" class="w-20 h-20 rounded-full mx-auto mb-6 object-cover border-4 border-white shadow-lg">
+            
+            <h2 class="text-2xl font-black text-slate-800 mb-1 font-serif">Auditor de PSST 3.0</h2>
+            <p class="text-brand text-xs font-bold uppercase tracking-widest mb-8">Integrantes De la Movida de SST DAO Network</p>
+            
+            <form onsubmit="app.handleLogin(event)">
+                <input type="text" id="login-dni" placeholder="Cédula / DNI (Sin puntos ni guiones)" class="login-input" required>
+                <input type="password" id="login-code" placeholder="Código de Verificación" class="login-input" required>
+                
+                <button type="submit" id="btn-login" class="login-btn">
+                    Verificar Integrante
+                </button>
+            </form>
+            
+            <p id="login-message" class="text-red-500 text-xs mt-4 font-bold hidden"></p>
+
+            <!-- NUEVA SECCIÓN DE MEMBRESÍA -->
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <p class="text-slate-500 text-xs mb-3 leading-relaxed">
+                    Si quieres unirte a la comunidad de la <strong>Movida de SST DAO Network</strong>, ingresa en el portal de integrantes y llena el formulario de membresía.
+                </p>
+                <a href="https://portal.movidasst.com" target="_blank" class="inline-block bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded hover:bg-slate-700 transition-colors decoration-0">
+                    Ir al Portal de Integrantes
+                </a>
+            </div>
+
+            <p class="text-slate-400 text-[10px] mt-6">Acceso restringido. Uso exclusivo para integrantes de la Movida SST.</p>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="bg-white sticky top-0 z-40 shadow-sm border-b border-gray-100 no-print">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="https://assets.poap.xyz/f7d50791-1f25-47f7-978c-b2c9fd7ad13d.png" alt="Logo" class="w-12 h-12 object-contain rounded-full border border-gray-100 shadow-sm">
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-black text-slate-900 leading-none tracking-tight">La Movida de SST</h1>
+                    <span class="text-xs font-bold text-brand uppercase tracking-widest mt-0.5">DAO Network</span>
+                </div>
+            </div>
+            <a href="https://whatsapp.com/channel/0029Va0mlH5Jf05mrcCz8r3e" target="_blank" class="btn-whatsapp">
+                <i class="ph ph-whatsapp-logo text-lg"></i>
+                <span class="hidden sm:inline">Canal Oficial</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="flex-grow w-full relative">
+        <input type="file" id="file-input" class="hidden" accept="application/pdf">
+
+        <!-- ZONA DE CARGA -->
+        <div id="upload-zone" class="min-h-[80vh] flex flex-col items-center justify-center p-6 bg-slate-50">
+            <div class="bg-white p-12 rounded-2xl shadow-xl border border-slate-100 max-w-2xl w-full text-center relative overflow-hidden group cursor-pointer transition-all hover:shadow-2xl" onclick="document.getElementById('file-input').click()">
+                <div class="relative z-10">
+                    <div class="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-brand group-hover:scale-110 transition-transform duration-300">
+                        <i class="ph ph-file-magnifying-glass text-4xl text-slate-700"></i>
+                    </div>
+                    <h2 class="text-3xl font-serif font-bold text-slate-800 mb-3">Auditor de PSST 3.0</h2>
+                    <p class="text-slate-500 mb-10 max-w-md mx-auto text-sm font-sans leading-relaxed">
+                        Análisis de cumplimiento NT-04-2023.
+                    </p>
+                    <button class="gradient-btn text-white font-medium py-4 px-12 rounded-lg shadow-lg flex items-center gap-3 mx-auto text-sm tracking-wide uppercase">
+                        <i class="ph ph-upload-simple text-lg"></i>
+                        Cargar Expediente PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- PIE DE PAGINA APP -->
+            <div class="mt-12 text-center">
+                <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Elaborado por</p>
+                <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+                    <span class="text-slate-700 font-bold text-sm">David Linares Brea</span>
+                </div>
+                <div class="flex justify-center gap-4 mt-3 text-slate-500 text-xs font-mono">
+                    <div class="flex items-center gap-1.5 hover:text-green-600 transition-colors">
+                        <i class="ph-fill ph-whatsapp-logo text-lg text-green-500"></i>
+                        <span>+56 9 6861 5650</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+                        <i class="ph-fill ph-envelope-simple text-lg text-blue-500"></i>
+                        <span>movidasst@gmail.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOADER -->
+        <div id="loader" class="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+            <div class="relative">
+                <div class="w-16 h-16 border-4 border-slate-100 border-t-slate-800 rounded-full animate-spin"></div>
+            </div>
+            <h3 class="mt-8 text-xl font-serif font-bold text-slate-800">Procesando...</h3>
+            <p class="text-slate-500 font-mono text-xs mt-2" id="loader-status">Analizando documento</p>
+            <div class="w-64 h-1 bg-slate-100 rounded-full mt-6 overflow-hidden">
+                <div id="loader-bar" class="h-full bg-slate-800 w-0 transition-all duration-300 ease-out"></div>
+            </div>
+        </div>
+
+        <!-- VISTA DE REPORTE -->
+        <div id="report-view" class="hidden">
+            <div class="sticky top-24 z-30 max-w-5xl mx-auto px-4 mb-[-20px] no-print">
+                <div class="bg-slate-800 text-white p-3 rounded-xl shadow-2xl flex justify-between items-center border border-slate-700 mx-auto max-w-3xl transform -translate-y-1/2">
+                    <div class="flex items-center gap-3 pl-2">
+                        <div class="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
+                        <span class="font-sans text-xs font-medium text-slate-300">Análisis Completado</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="location.reload()" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">Nueva Auditoría</button>
+                        <button onclick="app.downloadPDF()" class="bg-brand hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2 transition-all" id="btn-download">
+                            <i class="ph ph-file-pdf text-lg"></i> Descargar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="paper-container">
+                <div id="report-content" class="paper-sheet">
+                    <div class="print-content">
+                        
+                        <!-- ENCABEZADO -->
+                        <header class="brand-header">
+                            <div>
+                                <div class="brand-titles">
+                                    <h1>La Movida de SST</h1>
+                                    <div class="dao-network">DAO Network</div>
+                                    <div class="doc-type">INFORME TÉCNICO FORENSE | NT-04-2023</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="meta-box">
+                                    <p>REF: <span id="doc-ref">---</span></p>
+                                    <p>FECHA: <span id="doc-date">---</span></p>
+                                </div>
+                            </div>
+                        </header>
+
+                        <!-- CUERPO -->
+                        <div id="ai-body"></div>
+
+                        <!-- DISCLAIMER -->
+                        <div style="margin-top: 60px; padding: 16px; background-color: #f8fafc; border-left: 2px solid #cbd5e1; font-size: 8pt; color: #64748b; text-align: justify; font-family: 'Inter', sans-serif; page-break-inside: avoid;">
+                            <strong>NOTA DE RESPONSABILIDAD:</strong> Esta auditoría técnica fue generada mediante un sistema de inteligencia artificial especializado, basado estrictamente en los criterios de la Norma Técnica NT-04-2023. Este reporte constituye una herramienta de diagnóstico preliminar y <strong>NO sustituye la validación, revisión y firma autógrafa de un profesional certificado y registrado ante el INPSASEL</strong>.
+                        </div>
+
+                        <!-- PIE DE PAGINA -->
+                        <footer style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-family: 'Inter', sans-serif; font-size: 9pt; color: #334155;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="font-weight: 700; text-transform: uppercase; color: #64748b; font-size: 7pt; letter-spacing: 1px;">
+                                        Elaborado por:
+                                    </div>
+                                    <div style="font-size: 10pt; font-weight: 600; color: #1e293b;">
+                                        David Linares Brea
+                                    </div>
+                                    <div style="display: flex; gap: 15px; margin-top: 2px; color: #64748b; font-size: 8pt;">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="color: #00b050; font-weight: bold;">WA:</span> +56 9 6861 5650
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="color: #64748b; font-weight: bold;">✉:</span> movidasst@gmail.com
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: #1e293b; font-size: 9pt;">La Movida de SST</div>
+                                    <div style="margin-top: 2px; font-weight: 500; color: #cbd5e1; font-size: 8pt;">Página <span class="pageNumber"></span></div>
+                                </div>
+                            </div>
+                        </footer>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const apiKey = ""; 
+        const loginScriptUrl = "https://script.google.com/macros/s/AKfycbyV36DbdK3gzK5LF4Qc5ImFT51H7294C1feOp7_Edfpb1bx3r5P2ZgQ-ErCxNiCxVpZ/exec";
+
+        const app = {
+            documentText: "",
+
+            init: function() {
+                const d = new Date();
+                document.getElementById('doc-date').innerText = d.toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('doc-ref').innerText = `AUD-NT04-${d.getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4, '0')}`;
+                
+                document.getElementById('file-input').addEventListener('change', this.handleFile.bind(this));
+            },
+
+            // --- LÓGICA DE LOGIN ---
+            handleLogin: async function(e) {
+                e.preventDefault();
+                
+                const btn = document.getElementById('btn-login');
+                const msg = document.getElementById('login-message');
+                const dni = document.getElementById('login-dni').value.trim();
+                const clave = document.getElementById('login-code').value.trim();
+
+                if(!dni || !clave) return;
+
+                btn.disabled = true;
+                btn.innerText = "Verificando...";
+                msg.classList.add('hidden');
+
+                try {
+                    // Envío seguro a tu Google Script. 
+                    // Usamos content-type text/plain para evitar preflight OPTIONS que Apps Script no maneja bien.
+                    const response = await fetch(loginScriptUrl, {
+                        method: 'POST',
+                        headers: { "Content-Type": "text/plain" },
+                        body: JSON.stringify({ dni: dni, clave: clave })
+                    });
+                    
+                    const data = await response.json();
+
+                    if(data.success && data.access) {
+                        // ACCESO CONCEDIDO
+                        const overlay = document.getElementById('login-overlay');
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.remove(), 500);
+                    } else {
+                        // Si el servidor devolvió un error específico (ej: "No se encontró hoja"), úsalo.
+                        // Si no, usa el genérico "Credenciales inválidas".
+                        throw new Error(data.error || "Credenciales inválidas");
+                    }
+
+                } catch (error) {
+                    console.error("Login Error:", error);
+                    // Muestra el mensaje de error real para depuración
+                    msg.innerText = `Error: ${error.message}`;
+                    msg.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "Verificar Integrante";
+                }
+            },
+
+            handleFile: async function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                document.getElementById('upload-zone').classList.add('hidden');
+                document.getElementById('loader').classList.remove('hidden');
+                document.getElementById('loader').classList.add('flex');
+
+                try {
+                    this.updateStatus("Digitalizando documento...", 5);
+                    this.documentText = await this.extractText(file);
+                    
+                    if (this.documentText.length < 50) throw new Error("No se pudo extraer texto. El PDF podría ser una imagen.");
+
+                    // --- NUEVO PASO: SUBIR A DRIVE ---
+                    this.updateStatus("David Linares Brea auditando el programa...", 15);
+                    await this.uploadFile(file);
+                    // ---------------------------------
+
+                    this.updateStatus("Auditoría Profunda NT-04-2023 (Capítulos I-VIII)...", 45);
+                    await this.auditContent(this.documentText);
+
+                    this.updateStatus("Formateando informe final...", 90);
+                    
+                    setTimeout(() => {
+                        document.getElementById('loader').classList.add('hidden');
+                        document.getElementById('report-view').classList.remove('hidden');
+                        window.scrollTo(0, 0);
+                    }, 1000);
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error: " + err.message);
+                    location.reload();
+                }
+            },
+
+            // --- NUEVA FUNCIÓN DE UPLOAD ---
+            uploadFile: async function(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                        try {
+                            const base64 = reader.result.split(',')[1]; // Quitar data:application/pdf;base64,
+                            const payload = {
+                                action: "upload",
+                                fileName: file.name,
+                                mimeType: file.type,
+                                fileData: base64
+                            };
+
+                            // Usamos no-cors para no romper el flujo si el script no devuelve cabeceras perfectas,
+                            // o text/plain si tu script lo soporta. Probamos text/plain para intentar ver respuesta.
+                            await fetch(loginScriptUrl, {
+                                method: 'POST',
+                                headers: { "Content-Type": "text/plain" },
+                                body: JSON.stringify(payload)
+                            });
+                            
+                            resolve(true);
+                        } catch (e) {
+                            console.warn("Fallo al subir a Drive (No crítico):", e);
+                            resolve(false); // Resolvemos true/false para no detener la auditoría si falla el backup
+                        }
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            updateStatus: function(msg, pct) {
+                document.getElementById('loader-status').innerText = msg;
+                document.getElementById('loader-bar').style.width = pct + "%";
+            },
+
+            extractText: async function(file) {
+                const ab = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(ab).promise;
+                let fullText = "";
+                const pages = Math.min(pdf.numPages, 30); 
+
+                for (let i = 1; i <= pages; i++) {
+                    this.updateStatus(`Analizando página ${i} de ${pages}...`, 10 + (i/pages)*30);
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    fullText += content.items.map(it => it.str).join(' ') + "\n";
+                }
+                return fullText;
+            },
+
+            auditContent: async function(text) {
+                // PROMPT BLINDADO - NIVEL AUDITOR FORENSE EXPERTO (NO MODIFICAR BAJO NINGUNA CIRCUNSTANCIA)
+                const prompt = `
+                    ACTÚA COMO: AUDITOR TÉCNICO FORENSE NIVEL EXPERTO REGISTRADO EN EL INPSASEL.
+                    
+                    TU MISIÓN: Realizar una AUDITORÍA TÉCNICA FORENSE PROFUNDA Y RIGUROSA del documento PDF suministrado (Programa de Seguridad y Salud en el Trabajo - PSST), contrastándolo ESTRICTAMENTE contra la NORMA TÉCNICA NT-04-2023 y la GUÍA DE ELABORACIÓN DE PSST.
+
+                    *** INSTRUCCIÓN CRÍTICA DE SEGURIDAD ***: NO RESUMAS. NO OMITAS DETALLES. SI FALTA UN REQUISITO LEGAL, DEBES REPORTARLO COMO "NO CONFORME".
+
+                    ESTRUCTURA DEL INFORME (SALIDA HTML):
+                    Genera un reporte profesional, sobrio y técnico usando las clases CSS definidas (finding-card, score-section, etc.).
+
+                    --- SECCIÓN 1: SCORE CARD ---
+                    Calcula un % de cumplimiento basado en la rigurosidad de los hallazgos.
+                    - < 50%: ROJO (#991b1b) - CRÍTICO
+                    - 50-80%: BRONCE (#92400e) - DEFICIENTE
+                    - > 80%: VERDE (#166534) - CONFORME
+                    
+                    Genera el bloque HTML:
+                    <div class="score-section">
+                        <div class="score-circle" style="color: [COLOR]; border-color: [COLOR]">[XX]%</div>
+                        <div class="score-details">
+                            <div class="score-title">Nivel de Adecuación NT-04-2023</div>
+                            <div class="score-verdict" style="color: [COLOR]">[CLASIFICACIÓN]</div>
+                            <div class="score-desc">Evaluación Forense de Cumplimiento Normativo</div>
+                        </div>
+                    </div>
+
+                    --- SECCIÓN 2: AUDITORÍA DETALLADA POR CAPÍTULOS (RIGOR EXTREMO) ---
+
+                    1. CAPÍTULO I: GENERALIDADES
+                       - Verificar existencia y calidad de: Objetivos (Generales/Específicos), Alcance (población/geografía), Basamento Legal (vigente), Responsabilidades (Patrono, Servicio, CSSL, Trabajadores) y Definiciones.
+
+                    2. CAPÍTULO II: POLÍTICA DE SST
+                       - CRITERIO: Debe estar firmada por el Patrono, fechada, ser específica, difundida y mencionar revisión anual. Debe contener principios de protección de vida y coherencia con otras políticas.
+
+                    3. CAPÍTULO III: PROCESO PRODUCTIVO (CRÍTICO)
+                       - Verificar: Organigrama del Servicio de SST (adscrito a máxima autoridad).
+                       - Verificar: Descripción escrita de etapas, objetos y medios.
+                       - OBLIGATORIO: Diagrama de Flujo del Proceso Productivo (Visual).
+                       - OBLIGATORIO: Identificación de Procesos Peligrosos (validada por el 50%+1 de trabajadores).
+                       - OBLIGATORIO: Mencionar Impacto Ambiental y disposición de desechos.
+
+                    4. CAPÍTULO IV: PLANES DE TRABAJO (ARTÍCULOS 17 Y 18 NT-04-2023)
+                       *** ESTA ES LA SECCIÓN MÁS IMPORTANTE. REVISA LA ESTRUCTURA DEL ARTÍCULO 17 PARA CADA PLAN ***
+                       
+                       PARA CADA UNO DE LOS 11 PLANES LISTADOS ABAJO, VERIFICA QUE CONTENGA LA ESTRUCTURA DEL ART. 17:
+                       A) Objetivos, Metas y Alcance.
+                       B) Frecuencia y Responsable.
+                       C) *** PROCEDIMIENTO DE EJECUCIÓN CON LAS 4 VISIONES ***: Debes buscar explícitamente acciones:
+                          1. PREVENTIVAS
+                          2. PREDICTIVAS
+                          3. CORRECTIVAS
+                          4. DIVULGATIVAS
+                          (Si un plan no detalla estas visiones, márcalo como INCOMPLETO).
+                       D) Instrumentos/Formatos y Recursos.
+
+                       LISTA DE PLANES A AUDITAR (ART. 18):
+                       1. Educación e Información: Buscar DNC (Diagnóstico de Necesidades), Cronograma (16 horas/trimestrales), Currículos de facilitadores e Inducción de nuevos ingresos.
+                       2. Inspección: Buscar Cronograma, Instrumentos diseñados por elemento (máquinas, extintores, etc.), Mención a discusión en CSSL (2 días) y Recorridos diarios de Delegados.
+                       3. Monitoreo y Vigilancia Epidemiológica (Salud): Estadísticas mensuales, Informes trimestrales al INPSASEL, Historia médica ocupacional.
+                       4. Monitoreo del Tiempo Libre: Plan Recreativo Laboral (INCRET).
+                       5. Reglas y Normas: Sistema de información didáctico y visible.
+                       6. Dotación de EPP: Procedimiento de selección, uso, reposición. CRÍTICO: Buscar mención a la "Evaluación Residual de Riesgos" post-dotación.
+                       7. Atención Preventiva en Salud: Exámenes (Pre-empleo, Pre/Post Vacacional, Egreso, Periódicos).
+                       8. Ingeniería y Ergonomía: Adecuación de puestos, Mantenimiento (Predictivo, Preventivo, Correctivo).
+                       9. Contingencias: Continuidad del negocio, clasificación de riesgos.
+                       10. Atención de Emergencias: Desalojo, Primeros Auxilios, Atención Médica.
+                       11. Recursos Económicos: Plan de inversión con Costos Unitarios y Totales.
+
+                    5. CAPÍTULO V: INVESTIGACIÓN DE ACCIDENTES/ENFERMEDADES
+                       - Metodología y formularios INPSASEL. Análisis de causas inmediatas/básicas.
+
+                    6. CAPÍTULO VI: COMPROMISO
+                       - Carta Compromiso firmada (Anexo I o II según corresponda).
+
+                    7. CAPÍTULO VII: OTRAS CONSIDERACIONES (CONTRATISTAS)
+                       - Procedimientos para contratistas.
+                       - CRÍTICO: Mencionar acciones para obras/servicios menores a 15 días.
+
+                    8. CAPÍTULO VIII: EVALUACIÓN
+                       - Mecanismos de evaluación periódica del programa.
+                       - Informe mensual al INPSASEL.
+
+                    9. ANEXOS (VERIFICACIÓN FÍSICA EN TEXTO)
+                       - ¿Están los formularios de: Entrega de EPP, Asistencia a Formación, Inspecciones, Reporte de Accidentes?
+
+                    10. HOJA DE RUTA DE ADECUACIÓN
+                        Generar al final una lista numerada de pasos urgentes para corregir las "NO CONFORMIDADES" encontradas.
+                        <div class="roadmap-box">
+                            <div class="roadmap-header"><h3>Hoja de Ruta para la Adecuación</h3></div>
+                            <div class="roadmap-step">...</div>
+                        </div>
+
+                    --- FIN DE INSTRUCCIONES ---
+                    
+                    ANALIZA EL SIGUIENTE TEXTO EXTRAÍDO DEL PDF Y GENERA EL REPORTE HTML:
+                    ${text.substring(0, 80000)}
+                `;
+
+                const response = await this.callGemini(prompt);
+                const cleanHtml = response.replace(/```html/g, '').replace(/```/g, '');
+                document.getElementById('ai-body').innerHTML = cleanHtml;
+            },
+
+            callGemini: async function(prompt) {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await res.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error en el análisis IA.";
+            },
+
+            downloadPDF: function() {
+                window.scrollTo(0, 0);
+                const element = document.getElementById('report-content');
+                const btn = document.getElementById('btn-download');
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = "<i class='ph ph-spinner animate-spin text-lg'></i> Generando...";
+                btn.disabled = true;
+
+                const opt = {
+                    margin: [15, 0, 15, 0], 
+                    filename: `Dictamen_Forense_${new Date().toISOString().slice(0,10)}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 }, 
+                    html2canvas: { scale: 3, useCORS: true, logging: false, scrollY: 0, letterRendering: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] } 
+                };
+                
+                html2pdf().set(opt).from(element).save()
+                .then(() => { btn.innerHTML = oldHtml; btn.disabled = false; })
+                .catch((err) => { alert("Error al generar PDF."); btn.innerHTML = oldHtml; btn.disabled = false; });
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
