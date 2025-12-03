@@ -27,8 +27,23 @@
                         mono: ['"Fira Code"', 'monospace']
                     },
                     colors: {
-                        brand: { DEFAULT: '#00b050' },
-                        slate: { 850: '#1e293b' } 
+                        // Paleta Pastel Armónica
+                        brand: { 
+                            DEFAULT: '#4ade80', // Verde menta suave
+                            dark: '#16a34a',
+                            light: '#dcfce7'
+                        },
+                        pastel: {
+                            blue: '#e0f2fe',
+                            purple: '#f3e8ff',
+                            rose: '#ffe4e6',
+                            yellow: '#fef3c7',
+                            slate: '#f8fafc'
+                        },
+                        text: {
+                            main: '#334155',
+                            light: '#64748b'
+                        }
                     }
                 }
             }
@@ -40,7 +55,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Fira+Code:wght@400&display=swap');
 
         body { 
-            background-color: #f8fafc; 
+            background-color: #f0f9ff; /* Fondo azul cielo muy suave */
             color: #334155; 
             -webkit-font-smoothing: antialiased; 
         }
@@ -53,7 +68,7 @@
             width: 100%;
             height: 100%;
             background-color: #ffffff;
-            z-index: 9999; /* Por encima de todo */
+            z-index: 9999; 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -65,10 +80,10 @@
             width: 90%;
             max-width: 400px;
             padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -12px rgba(148, 163, 184, 0.15); /* Sombra suave azulada */
             text-align: center;
-            border: 1px solid #f1f5f9;
+            border: 1px solid #e2e8f0;
         }
 
         .login-input {
@@ -76,43 +91,46 @@
             padding: 14px 16px;
             margin-bottom: 16px;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border-radius: 12px;
             font-family: 'Inter', sans-serif;
             font-size: 14px;
             outline: none;
             transition: all 0.2s;
             background: #f8fafc;
+            color: #475569;
         }
 
         .login-input:focus {
-            border-color: #00b050;
+            border-color: #4ade80;
             background: #fff;
-            box-shadow: 0 0 0 3px rgba(0, 176, 80, 0.1);
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
         }
 
         .login-btn {
             width: 100%;
             padding: 14px;
-            background: #00b050;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); /* Gradiente verde suave */
             color: white;
             font-weight: 700;
-            border-radius: 8px;
+            border-radius: 12px;
             transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-size: 13px;
+            border: none;
+            cursor: pointer;
         }
 
         .login-btn:hover {
-            background: #008a3e;
-            transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px rgba(0, 176, 80, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(74, 222, 128, 0.3);
         }
 
         .login-btn:disabled {
-            background: #94a3b8;
+            background: #cbd5e1;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .hidden-login {
@@ -142,26 +160,26 @@
             align-items: flex-end; 
             justify-content: space-between;
             padding-bottom: 1.5rem;
-            border-bottom: 1px solid #e2e8f0; 
+            border-bottom: 2px solid #e0f2fe; /* Línea azul pastel */
             margin-bottom: 2.5rem;
             page-break-inside: avoid;
         }
 
         .brand-titles h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 22pt;
+            font-size: 24pt;
             font-weight: 800; 
             margin: 0;
-            color: #1e293b; 
+            color: #0f172a; 
             letter-spacing: -0.5px;
             line-height: 1;
         }
         
         .brand-titles .dao-network {
             font-family: 'Inter', sans-serif;
-            color: #00b050; 
+            color: #22c55e; /* Verde un poco más vivo para contraste */
             font-size: 10pt;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-top: 6px;
@@ -187,12 +205,13 @@
             align-items: center;
             gap: 24px;
             margin-bottom: 40px;
-            padding: 20px;
+            padding: 24px;
             background: #fff;
             border: 1px solid #f1f5f9;
-            border-radius: 12px;
+            border-radius: 16px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
             page-break-inside: avoid;
+            background-color: #f8fafc; /* Fondo gris muy pálido */
         }
 
         .score-circle {
@@ -205,22 +224,23 @@
             font-family: 'Playfair Display', serif;
             font-size: 20pt;
             font-weight: 700;
-            background: #f8fafc; 
+            background: #ffffff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .score-title {
             font-family: 'Inter', sans-serif;
-            font-size: 8pt;
+            font-size: 9pt;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #94a3b8;
+            color: #64748b;
             font-weight: 600;
             margin-bottom: 4px;
         }
 
         .score-verdict {
             font-family: 'Playfair Display', serif;
-            font-size: 14pt;
+            font-size: 16pt;
             font-weight: 700;
             color: #1e293b;
             margin-bottom: 4px;
@@ -234,67 +254,70 @@
         /* HALLAZGOS */
         .chapter-title {
             font-family: 'Playfair Display', serif;
-            font-size: 13pt;
+            font-size: 14pt;
             font-weight: 700;
             color: #334155; 
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 8px;
-            margin-top: 35px;
-            margin-bottom: 15px;
+            margin-top: 40px;
+            margin-bottom: 20px;
             page-break-after: avoid;
         }
         
         .finding-card {
             background: #fff;
             border: 1px solid #f1f5f9; 
-            border-left-width: 3px; 
-            border-radius: 4px;
-            padding: 14px 18px;
-            margin-bottom: 12px;
+            border-left-width: 4px; 
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         
-        .card-ok { border-left-color: #86efac; background-color: #fafffc; } 
-        .card-fail { border-left-color: #fca5a5; background-color: #fffbfc; } 
-        .card-warn { border-left-color: #fcd34d; background-color: #ffnfef; } 
-        .card-absent { border-left-color: #cbd5e1; border-style: solid; background-color: #f8fafc; } 
+        /* Colores pasteles para estados */
+        .card-ok { border-left-color: #86efac; background-color: #f0fdf4; } /* Verde pastel */
+        .card-fail { border-left-color: #fca5a5; background-color: #fef2f2; } /* Rojo pastel */
+        .card-warn { border-left-color: #fcd34d; background-color: #fffbeb; } /* Amarillo pastel */
+        .card-absent { border-left-color: #cbd5e1; border-style: solid; background-color: #f8fafc; } /* Gris pastel */
 
         .finding-header {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .finding-title {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 10.5pt;
             color: #1e293b; 
         }
         
         .status-badge { 
             font-size: 7pt; 
-            font-weight: 600; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
+            font-weight: 700; 
+            padding: 3px 10px; 
+            border-radius: 20px; 
             text-transform: uppercase; 
             letter-spacing: 0.5px;
         }
-        .st-ok { background: #dcfce7; color: #166534; } 
-        .st-fail { background: #fee2e2; color: #991b1b; } 
-        .st-warn { background: #fef3c7; color: #92400e; } 
-        .st-absent { background: #f1f5f9; color: #64748b; } 
+        .st-ok { background: #dcfce7; color: #15803d; } 
+        .st-fail { background: #fee2e2; color: #b91c1c; } 
+        .st-warn { background: #fef3c7; color: #b45309; } 
+        .st-absent { background: #e2e8f0; color: #475569; } 
 
         .finding-body {
             font-size: 9.5pt;
             color: #475569; 
+            line-height: 1.5;
         }
 
-        .recommendation-list { list-style: none; padding: 0; margin-top: 8px; }
+        .recommendation-list { list-style: none; padding: 0; margin-top: 10px; }
         .recommendation-list li { 
-            margin-bottom: 4px; 
-            padding-left: 14px; 
+            margin-bottom: 5px; 
+            padding-left: 16px; 
             position: relative; 
             color: #334155;
             font-size: 9pt;
@@ -302,54 +325,54 @@
         .recommendation-list li::before { 
             content: "•"; 
             color: #94a3b8; 
-            font-size: 12pt; 
+            font-size: 14pt; 
             position: absolute; 
             left: 0; 
-            top: -2px; 
+            top: -4px; 
         }
 
         /* HOJA DE RUTA */
         .roadmap-box {
-            background: #fff;
+            background: #f8fafc;
             border: 1px solid #e2e8f0; 
-            border-top: 3px solid #cbd5e1; 
-            border-radius: 4px;
-            padding: 24px;
-            margin-top: 40px;
+            border-top: 4px solid #94a3b8; 
+            border-radius: 8px;
+            padding: 28px;
+            margin-top: 50px;
             page-break-inside: avoid;
         }
         
         .roadmap-header h3 {
             font-family: 'Playfair Display', serif;
             color: #1e293b; 
-            font-size: 12pt; 
+            font-size: 14pt; 
             font-weight: 700;
-            margin: 0 0 16px 0;
+            margin: 0 0 20px 0;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .roadmap-step {
             display: flex;
-            gap: 16px;
-            margin-bottom: 12px;
+            gap: 18px;
+            margin-bottom: 16px;
             align-items: flex-start;
         }
         
         .step-number {
-            color: #64748b;
+            color: #94a3b8;
             font-family: 'Playfair Display', serif;
             font-weight: 700;
-            font-size: 14pt;
+            font-size: 16pt;
             line-height: 1;
             flex-shrink: 0;
-            width: 20px;
+            width: 24px;
         }
         
         .step-content {
             font-size: 9.5pt;
             color: #334155;
-            padding-top: 2px;
+            padding-top: 3px;
         }
 
         /* UTILIDADES */
@@ -358,17 +381,18 @@
             display: flex;
             justify-content: center;
             padding: 40px 0;
-            background: #e2e8f0; 
+            background: #f1f5f9; 
         }
         .paper-sheet {
             background: white;
             width: 210mm; 
             min-height: 297mm;
             padding: 20mm; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
             margin: 0 auto;
             position: relative;
             box-sizing: border-box; 
+            border-radius: 2px;
         }
 
         @media print {
@@ -379,18 +403,18 @@
         }
 
         .btn-whatsapp {
-            background: #25D366; color: white; font-weight: bold; padding: 8px 16px; border-radius: 8px;
+            background: #25D366; color: white; font-weight: bold; padding: 8px 16px; border-radius: 50px;
             display: flex; align-items: center; gap: 8px; transition: all 0.2s; text-decoration: none; font-size: 0.85rem;
+            box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);
         }
         
         .gradient-btn {
-            background: #1e293b; 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
             transition: all 0.3s ease;
         }
         .gradient-btn:hover {
-            background: #0f172a;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
         }
     </style>
 </head>
@@ -400,10 +424,10 @@
     <div id="login-overlay">
         <div class="login-card">
             <!-- Logo solo aquí -->
-            <img src="https://assets.poap.xyz/f7d50791-1f25-47f7-978c-b2c9fd7ad13d.png" class="w-20 h-20 rounded-full mx-auto mb-6 object-cover border-4 border-white shadow-lg">
+            <img src="https://assets.poap.xyz/f7d50791-1f25-47f7-978c-b2c9fd7ad13d.png" class="w-24 h-24 rounded-full mx-auto mb-6 object-cover border-4 border-white shadow-xl">
             
-            <h2 class="text-2xl font-black text-slate-800 mb-1 font-serif">Auditor de PSST 3.0</h2>
-            <p class="text-brand text-xs font-bold uppercase tracking-widest mb-8">Integrantes De la Movida de SST DAO Network</p>
+            <h2 class="text-3xl font-black text-slate-800 mb-1 font-serif">Auditor de PSST 3.0</h2>
+            <p class="text-brand font-bold text-xs uppercase tracking-widest mb-8">Integrantes De la Movida de SST DAO Network</p>
             
             <form onsubmit="app.handleLogin(event)">
                 <input type="text" id="login-dni" placeholder="Cédula / DNI (Sin puntos ni guiones)" class="login-input" required>
@@ -414,14 +438,14 @@
                 </button>
             </form>
             
-            <p id="login-message" class="text-red-500 text-xs mt-4 font-bold hidden"></p>
+            <p id="login-message" class="text-rose-500 text-xs mt-4 font-bold hidden"></p>
 
             <!-- NUEVA SECCIÓN DE MEMBRESÍA -->
             <div class="mt-8 pt-6 border-t border-slate-100">
                 <p class="text-slate-500 text-xs mb-3 leading-relaxed">
                     Si quieres unirte a la comunidad de la <strong>Movida de SST DAO Network</strong>, ingresa en el portal de integrantes y llena el formulario de membresía.
                 </p>
-                <a href="https://portal.movidasst.com" target="_blank" class="inline-block bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded hover:bg-slate-700 transition-colors decoration-0">
+                <a href="https://portal.movidasst.com" target="_blank" class="inline-block bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded-full hover:bg-slate-700 transition-colors decoration-0">
                     Ir al Portal de Integrantes
                 </a>
             </div>
@@ -430,14 +454,14 @@
         </div>
     </div>
 
-    <!-- NAVBAR -->
+    <!-- NAVBAR MEJORADO PARA MÓVIL Y ESCRITORIO -->
     <nav class="bg-white sticky top-0 z-40 shadow-sm border-b border-gray-100 no-print">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 min-h-[80px] flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
                 <img src="https://assets.poap.xyz/f7d50791-1f25-47f7-978c-b2c9fd7ad13d.png" alt="Logo" class="w-12 h-12 object-contain rounded-full border border-gray-100 shadow-sm">
-                <div class="flex flex-col">
+                <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
                     <h1 class="text-xl font-black text-slate-900 leading-none tracking-tight">La Movida de SST</h1>
-                    <span class="text-xs font-bold text-brand uppercase tracking-widest mt-0.5">DAO Network</span>
+                    <span class="text-xs font-bold text-brand-dark uppercase tracking-widest mt-0.5">DAO Network</span>
                 </div>
             </div>
             <a href="https://whatsapp.com/channel/0029Va0mlH5Jf05mrcCz8r3e" target="_blank" class="btn-whatsapp">
@@ -453,16 +477,16 @@
 
         <!-- ZONA DE CARGA -->
         <div id="upload-zone" class="min-h-[80vh] flex flex-col items-center justify-center p-6 bg-slate-50">
-            <div class="bg-white p-12 rounded-2xl shadow-xl border border-slate-100 max-w-2xl w-full text-center relative overflow-hidden group cursor-pointer transition-all hover:shadow-2xl" onclick="document.getElementById('file-input').click()">
+            <div class="bg-white p-12 rounded-3xl shadow-xl border border-slate-100 max-w-2xl w-full text-center relative overflow-hidden group cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1" onclick="document.getElementById('file-input').click()">
                 <div class="relative z-10">
-                    <div class="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-brand group-hover:scale-110 transition-transform duration-300">
-                        <i class="ph ph-file-magnifying-glass text-4xl text-slate-700"></i>
+                    <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8 text-brand group-hover:scale-110 transition-transform duration-300">
+                        <i class="ph ph-file-magnifying-glass text-5xl text-brand-dark"></i>
                     </div>
-                    <h2 class="text-3xl font-serif font-bold text-slate-800 mb-3">Auditor de PSST 3.0</h2>
+                    <h2 class="text-3xl font-serif font-bold text-slate-800 mb-4">Auditor de PSST 3.0</h2>
                     <p class="text-slate-500 mb-10 max-w-md mx-auto text-sm font-sans leading-relaxed">
                         Análisis de cumplimiento NT-04-2023.
                     </p>
-                    <button class="gradient-btn text-white font-medium py-4 px-12 rounded-lg shadow-lg flex items-center gap-3 mx-auto text-sm tracking-wide uppercase">
+                    <button class="gradient-btn text-white font-medium py-4 px-12 rounded-full shadow-lg flex items-center gap-3 mx-auto text-sm tracking-wide uppercase">
                         <i class="ph ph-upload-simple text-lg"></i>
                         Cargar Expediente PDF
                     </button>
@@ -472,15 +496,15 @@
             <!-- PIE DE PAGINA APP -->
             <div class="mt-12 text-center">
                 <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Elaborado por</p>
-                <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+                <div class="inline-flex items-center gap-2 bg-white px-6 py-2 rounded-full shadow-sm border border-slate-100">
                     <span class="text-slate-700 font-bold text-sm">David Linares Brea</span>
                 </div>
-                <div class="flex justify-center gap-4 mt-3 text-slate-500 text-xs font-mono">
-                    <div class="flex items-center gap-1.5 hover:text-green-600 transition-colors">
+                <div class="flex justify-center gap-6 mt-4 text-slate-500 text-xs font-mono">
+                    <div class="flex items-center gap-1.5 hover:text-green-600 transition-colors cursor-pointer">
                         <i class="ph-fill ph-whatsapp-logo text-lg text-green-500"></i>
                         <span>+56 9 6861 5650</span>
                     </div>
-                    <div class="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+                    <div class="flex items-center gap-1.5 hover:text-blue-600 transition-colors cursor-pointer">
                         <i class="ph-fill ph-envelope-simple text-lg text-blue-500"></i>
                         <span>movidasst@gmail.com</span>
                     </div>
@@ -491,25 +515,26 @@
         <!-- LOADER -->
         <div id="loader" class="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
             <div class="relative">
-                <div class="w-16 h-16 border-4 border-slate-100 border-t-slate-800 rounded-full animate-spin"></div>
+                <div class="w-20 h-20 border-4 border-slate-100 border-t-slate-800 rounded-full animate-spin"></div>
             </div>
             <h3 class="mt-8 text-xl font-serif font-bold text-slate-800">Procesando...</h3>
             <p class="text-slate-500 font-mono text-xs mt-2" id="loader-status">Analizando documento</p>
-            <div class="w-64 h-1 bg-slate-100 rounded-full mt-6 overflow-hidden">
+            <div class="w-64 h-1.5 bg-slate-100 rounded-full mt-6 overflow-hidden">
                 <div id="loader-bar" class="h-full bg-slate-800 w-0 transition-all duration-300 ease-out"></div>
             </div>
         </div>
 
-        <!-- VISTA DE REPORTE -->
+        <!-- VISTA DE REPORTE - BARRA DE CONTROL ARMONIZADA -->
         <div id="report-view" class="hidden">
-            <div class="sticky top-24 z-30 max-w-5xl mx-auto px-4 mb-[-20px] no-print">
-                <div class="bg-slate-800 text-white p-3 rounded-xl shadow-2xl flex justify-between items-center border border-slate-700 mx-auto max-w-3xl transform -translate-y-1/2">
+            <!-- Barra de control: Sticky solo en desktop, espaciado corregido -->
+            <div class="relative md:sticky md:top-[90px] z-30 max-w-5xl mx-auto px-4 mt-6 mb-8 no-print">
+                <div class="bg-slate-800 text-white p-4 rounded-xl shadow-2xl flex flex-col sm:flex-row justify-between items-center border border-slate-700 mx-auto max-w-3xl gap-4">
                     <div class="flex items-center gap-3 pl-2">
-                        <div class="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></div>
                         <span class="font-sans text-xs font-medium text-slate-300">Análisis Completado</span>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="location.reload()" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">Nueva Auditoría</button>
+                    <div class="flex gap-3 w-full sm:w-auto justify-center">
+                        <button onclick="location.reload()" class="px-5 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">Nueva Auditoría</button>
                         <button onclick="app.downloadPDF()" class="bg-brand hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2 transition-all" id="btn-download">
                             <i class="ph ph-file-pdf text-lg"></i> Descargar PDF
                         </button>
@@ -542,15 +567,15 @@
                         <div id="ai-body"></div>
 
                         <!-- DISCLAIMER -->
-                        <div style="margin-top: 60px; padding: 16px; background-color: #f8fafc; border-left: 2px solid #cbd5e1; font-size: 8pt; color: #64748b; text-align: justify; font-family: 'Inter', sans-serif; page-break-inside: avoid;">
+                        <div style="margin-top: 60px; padding: 20px; background-color: #f8fafc; border-left: 3px solid #cbd5e1; font-size: 8pt; color: #64748b; text-align: justify; font-family: 'Inter', sans-serif; page-break-inside: avoid; border-radius: 0 4px 4px 0;">
                             <strong>NOTA DE RESPONSABILIDAD:</strong> Esta auditoría técnica fue generada mediante un sistema de inteligencia artificial especializado, basado estrictamente en los criterios de la Norma Técnica NT-04-2023. Este reporte constituye una herramienta de diagnóstico preliminar y <strong>NO sustituye la validación, revisión y firma autógrafa de un profesional certificado y registrado ante el INPSASEL</strong>.
                         </div>
 
                         <!-- PIE DE PAGINA -->
-                        <footer style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-family: 'Inter', sans-serif; font-size: 9pt; color: #334155;">
+                        <footer style="margin-top: 40px; padding-top: 24px; border-top: 2px solid #f1f5f9; font-family: 'Inter', sans-serif; font-size: 9pt; color: #334155;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <div style="font-weight: 700; text-transform: uppercase; color: #64748b; font-size: 7pt; letter-spacing: 1px;">
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="font-weight: 700; text-transform: uppercase; color: #94a3b8; font-size: 7pt; letter-spacing: 1px;">
                                         Elaborado por:
                                     </div>
                                     <div style="font-size: 10pt; font-weight: 600; color: #1e293b;">
@@ -558,7 +583,7 @@
                                     </div>
                                     <div style="display: flex; gap: 15px; margin-top: 2px; color: #64748b; font-size: 8pt;">
                                         <div style="display: flex; align-items: center; gap: 4px;">
-                                            <span style="color: #00b050; font-weight: bold;">WA:</span> +56 9 6861 5650
+                                            <span style="color: #22c55e; font-weight: bold;">WA:</span> +56 9 6861 5650
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 4px;">
                                             <span style="color: #64748b; font-weight: bold;">✉:</span> movidasst@gmail.com
@@ -872,4 +897,3 @@
     </script>
 </body>
 </html>
-
