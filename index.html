@@ -375,6 +375,20 @@
             padding-top: 3px;
         }
 
+        /* NUEVA CLASE PARA EL SEGUNDO INSTRUMENTO */
+        .instrument-check-item {
+            border-bottom: 1px solid #f1f5f9;
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .instrument-check-item:last-child { border-bottom: none; }
+        .instrument-question { font-weight: 600; color: #475569; width: 65%; font-size: 9pt; }
+        .instrument-status { width: 35%; text-align: right; }
+        .instrument-obs { display: block; font-size: 8.5pt; color: #94a3b8; margin-top: 4px; font-style: italic; }
+
         /* UTILIDADES */
         .paper-container {
             width: 100%;
@@ -865,6 +879,72 @@
                             <div class="roadmap-header"><h3>Hoja de Ruta para la Adecuación</h3></div>
                             <div class="roadmap-step">...</div>
                         </div>
+
+                    *** AGREGADO: SECCIÓN 3 - INSTRUMENTO DE REVISIÓN (SEGUNDO CHEQUEO INDEPENDIENTE) ***
+                    Realiza una SEGUNDA EVALUACIÓN utilizando EXCLUSIVAMENTE el siguiente cuestionario del INPSASEL.
+                    Genera esta sección al final, con un título claro: <h2 class="chapter-title" style="margin-top: 60px;">Instrumento de Revisión del PSST (Verificación INPSASEL)</h2>.
+                    
+                    Para cada pregunta, responde usando este formato HTML:
+                    <div class="instrument-check-item">
+                        <div class="instrument-question">[TEXTO DE LA PREGUNTA]</div>
+                        <div class="instrument-status">
+                            <span class="status-badge [CLASE_BADGE]">[CUMPLE / NO CUMPLE]</span>
+                            <span class="instrument-obs">[OBSERVACIÓN BREVE]</span>
+                        </div>
+                    </div>
+
+                    CUESTIONARIO A APLICAR:
+                    
+                    CAPÍTULO I. GENERALIDADES
+                    - Objetivo General: ¿Comunica la importancia de una gestión eficaz de seguridad y salud laboral y de cumplir con los requisitos de ésta? ¿Establece objetivos de seguridad y salud laboral y planifica para alcanzarlos? ¿Es consistente con la política de seguridad y salud en el trabajo?
+                    - Objetivo Específico: ¿Asegura que el sistema de gestión de seguridad y salud laboral logra los resultados previstos?
+                    - Alcance y aplicación: ¿Se han determinado los límites y el ámbito de aplicación del sistema de gestión de seguridad y salud en el trabajo?
+                    - Basamento Legal: ¿Aborda los requisitos legales y otros requisitos del ámbito de aplicación?
+                    - Responsabilidades y Corresponsabilidad: ¿Asigna roles organizativos, responsabilidades, rendición de cuentas y autoridades en su ámbito de aplicación? ¿Garantiza que las responsabilidades, la rendición de cuentas y las autoridades para los puestos relevantes dentro del sistema de gestión de seguridad y salud en el trabajo se asignen y se comuniquen en todos los niveles dentro de la organización y se mantengan como información documentada? ¿Asigna la responsabilidad y la autoridad para garantizar que el sistema de gestión de seguridad y salud en el trabajo cumple con los requisitos de la Norma Técnica (NT)?
+                    - Definiciones: ¿El glosario permite mantener una lista de definiciones acordes al Programa?
+
+                    CAPÍTULO II. POLÍTICA DE SEGURIDAD Y SALUD EN EL TRABAJO
+                    - ¿Posee Política de la entidad de trabajo en materia de Seguridad y Salud en el Trabajo?
+                    - ¿Demuestra liderazgo y compromiso con respecto al sistema de gestión de seguridad y salud en el trabajo?
+                    - ¿Asegura que la política de seguridad y salud en el trabajo y sus objetivos estén establecidos y sean compatibles con la dirección estratégica de la entidad de trabajo?
+                    - ¿Incluye el compromiso de proporcionar condiciones de trabajo seguras y saludables para la prevención de accidentes y enfermedades ocupacionales?
+                    - ¿Incluye el compromiso de eliminar peligros y reducir los riesgos de seguridad y salud en el trabajo?
+                    - ¿Incluye el compromiso de consulta y participación con los trabajadores, delegados y delegadas de prevención, Comité de Seguridad y Salud Laboral, y del Servicio de Seguridad y Salud en el Trabajo?
+                    - Principios Fundamentales: ¿Determina qué se debe comunicar y cómo se hará? ¿Desarrolla, lidera y promueve una cultura dentro de la entidad de trabajo que respalde el sistema de gestión de la seguridad y salud en el trabajo? ¿Ofrece su apoyo para demostrar su liderazgo en lo que se refiere a sus áreas de responsabilidad? ¿Guía y apoya a los trabajadores y trabajadoras para contribuir a la eficacia del sistema de gestión de seguridad y salud en el trabajo? ¿Incluye el compromiso de proporcionar condiciones de trabajo seguras y saludables para la prevención de accidentes y enfermedades ocupacionales?
+
+                    CAPÍTULO III. DESCRIPCIÓN DEL PROCESO PRODUCTIVO E IDENTIFICACIÓN DE PROCESOS
+                    - Organigrama: ¿Se encuentra presente el organigrama de la entidad de trabajo? ¿Se evidencia la estructura funcional y operativa del Servicio de Seguridad y Salud en el Trabajo?
+                    - Proceso Productivo: ¿En el diagrama de flujo se describe el proceso productivo?
+                    - Descripción del Proceso: ¿Se encuentran identificados los procesos de trabajo de la entidad de trabajo?
+                    - Descripción e identificación de etapas: ¿Se encuentran descritas e identificadas las etapas del proceso productivo, y cada una de las fases del proceso de trabajo? ¿Se hace descripción de la división de las áreas y departamentos, puestos de trabajo existentes, herramientas utilizadas, tipo de actividad, empresas contratistas? ¿Se evidencia la participación de los trabajadores y trabajadoras, mediante asamblea con la asistencia del 50% más 1 de la nómina general de los trabajadores?
+                    - Identificación de Procesos Peligrosos: ¿Se encuentran identificados los procesos peligrosos asociados en cada una de las etapas del proceso de trabajo? ¿Se evidencia la participación de los trabajadores y trabajadoras conforme a la validación de conocimientos y experiencias? ¿Para la identificación y validación de los procesos peligrosos se utilizó una metodología? (Asamblea de trabajadores y trabajadoras, encuestas, equipo homogéneo de trabajo u otros).
+                    - Adopción de medidas: ¿Se encuentran descritas las medidas preventivas y mejoras de los niveles de protección? ¿Se priorizan las acciones inmediatas? ¿Están reflejadas las acciones en los planes? ¿Las acciones permiten eliminar peligros y reducir los riesgos de seguridad y salud en el trabajo?
+
+                    CAPÍTULO IV. PLANES DE TRABAJO
+                    - Plan de Información y formación: ¿Se desarrolló un diagnóstico de las necesidades formativas en función al proceso productivo y al proceso peligroso? ¿Se aseguran las 16 horas trimestrales de formación en materia de seguridad y salud en el trabajo?
+                    - Estructura del Plan: ¿El Plan se encuentra estructurado de la siguiente manera? (Diagnóstico, Fundamentación, Objetivos, Contenidos, Actividades, Estrategias, Evaluación, Nivelación, Fuentes, Tiempo, Anexos).
+                    - Cronograma de Formación: ¿Posee el Cronograma de Formación y contempla los siguientes aspectos? (Nombre curso, Contenido, Estrategias, Tema/Fecha/Lugar/Facilitador, Nro participantes).
+                    - Plan de inducción: ¿El Plan de inducción posee la estructura requerida? (Fundamentación, Objetivos, Contenidos, Actividades, Estrategias, Evaluación, Nivelación, Fuentes, Tiempo, Anexos).
+                    - Cronograma de Inducción: ¿Posee el Cronograma de Inducción y contempla los aspectos requeridos?
+                    - Plan de Inspección: ¿Se encuentra elaborado el cronograma de Inspección adecuado a los procesos de trabajo? ¿El cronograma de inspección contempla la evaluación del medio ambiente de trabajo? ¿La inspección contempla la identificación, reconocimiento y detección de condiciones inseguras e insalubres? ¿Contempla la evaluación del funcionamiento adecuado de instalaciones, maquinarias, equipos y herramientas? ¿Se garantiza que los Delegados de Prevención realicen visitas a los lugares de trabajo, recreación y descanso para vigilancia y control al inicio de cada turno? ¿Se determinan las medidas de control, implementación y efectividad?
+                    - Plan de Monitoreo y Vigilancia Epidemiológica: ¿Se desarrolla un sistema de vigilancia epidemiológica de salud de los trabajadores? ¿Se mantiene un sistema de vigilancia epidemiológica de accidentes de trabajo y enfermedades ocupacionales? ¿Se contempla el proceso continuo de recolección y análisis de problemas de salud laboral de forma permanente? ¿Se considera la información de flujo continuo (accidentes, enfermedades, exámenes) estableciendo oportunamente medidas de control? ¿Se tiene establecido y desarrollado las estadísticas de accidentalidad y morbilidad mensual? ¿Se reportan los informes trimestrales de las estadísticas al INPSASEL?
+                    - Plan de Tiempo Libre: ¿Se cumple con la estructura y planteamientos establecidos por el INCRET?
+                    - Dotación de EPP: ¿Se establecieron criterios claros para la selección, uso, mantenimiento, reposición y disposición de los EPP? ¿Se presenta el procedimiento para la evaluación residual de concentración ambiental de sustancias o fenómenos físicos a los que se exponen los trabajadores? ¿Se encuentran identificados los EPP a utilizar según los procesos peligrosos existentes?
+                    - Plan de Atención Preventiva de Salud: ¿Se encuentra elaborado un cronograma para la Atención Preventiva de la Salud? ¿El plan especifica los estudios clínicos y paraclínicos a practicar según el puesto de trabajo y exposición a riesgos?
+                    - Plan de Ingeniería y Ergonomía: ¿Ha establecido procesos para controlar las adquisiciones y servicios garantizando conformidad con el sistema de gestión? ¿Se contemplan proyectos de ingeniería para la adecuación o remodelación de los puestos de trabajo? ¿Los proyectos de ingeniería fueron sometidos a evaluación y consideración del CSSL y SSST? ¿Se encuentra elaborado un plan de trabajo de ingeniería y ergonomía adecuado a los procesos de trabajo? ¿Existe diseñado e implementado un programa de mantenimiento predictivo, preventivo y correctivo?
+                    - Plan de Contingencias: ¿Se encuentra elaborado un plan para el abordaje de emergencias y contingencias? ¿Se adapta a la estructura y proceso productivo de la entidad de trabajo?
+                    - Plan de Desalojo: ¿Se planean las acciones para llevar a cabo las actuaciones en caso de desalojo?
+                    - Recursos Económicos: ¿Se garantizan los recursos económicos para lograr la ejecución de los objetivos y planes?
+
+                    CAPÍTULO V. INVESTIGACIÓN DE ACCIDENTES Y ENFERMEDADES
+                    - Accidente de Trabajo: ¿Posee un procedimiento establecido para la investigación de accidentes? ¿Posee un formato para la investigación de accidentes?
+                    - Enfermedad Ocupacional: ¿Posee un procedimiento establecido para la investigación de enfermedades? ¿Posee un formato para la investigación de enfermedades ocupacionales?
+
+                    CAPÍTULO VI. COMPROMISO
+                    - ¿Informa sobre el rendimiento del sistema de gestión de seguridad y salud laboral? ¿Su organización establece, implementa y mantiene procesos de consulta y participación con los trabajadores en todos los niveles y funciones? ¿Participan los trabajadores en el desarrollo, planificación, implementación, evaluación y acciones de mejora del sistema? ¿Proporciona los mecanismos, el tiempo, la capacitación y los recursos necesarios? ¿Proporciona acceso oportuno a información relevante sobre el sistema de gestión de seguridad y salud laboral?
+
+                    CAPÍTULO VII. OTRAS CONSIDERACIONES
+                    - ¿Se ha coordinado el proceso de adquisiciones con sus contratistas para identificar peligros y evaluar y controlar los riesgos de seguridad y salud laboral que surgen de actividades y operaciones que tienen un impacto en la organización? ¿Se ha asegurado de que los contratistas y sus trabajadores cumplan con los requisitos del sistema de gestión de seguridad y salud laboral? ¿Determina los controles operativos aplicables a la contratación externa de funciones y procesos?
 
                     --- FIN DE INSTRUCCIONES ---
                     
