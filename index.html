@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor PSST - La Movida de SST</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Librerías para lectura de documentos, renderizado de Markdown y generación de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            teal: '#007b85',
+                            dark: '#00205b',
+                            green: '#70ad47',
+                            yellow: '#ffb600',
+                            light: '#f8fafc'
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 6s ease-in-out infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.05' },
+                            '50%': { opacity: '0.15' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f8fafc;
+            background-image: linear-gradient(rgba(0, 32, 91, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 32, 91, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        /* Glassmorphism premium */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px -5px rgba(0, 123, 133, 0.12);
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #00205b, #007b85, #70ad47);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+        }
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Estilos Markdown */
+        .markdown-content h2 { color: #00205b; font-size: 1.5rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .markdown-content h3 { color: #007b85; font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-content p { color: #475569; margin-bottom: 1rem; line-height: 1.6; }
+        .markdown-content ul { list-style-type: none; padding-left: 0; margin-bottom: 1.5rem; }
+        .markdown-content li { position: relative; padding-left: 1.5rem; margin-bottom: 0.75rem; color: #475569; }
+        .markdown-content li::before { content: '•'; position: absolute; left: 0; color: #007b85; font-weight: bold; }
+        .markdown-content strong { color: #00205b; }
+
+        /* Estilos Específicos para PDF Export */
+        .pdf-export-mode {
+            background: white !important;
+            padding: 20px !important;
+        }
+        .pdf-export-mode * {
+            page-break-inside: avoid;
+            word-wrap: break-word;
+        }
+        .pdf-export-mode .glass-card {
+            box-shadow: none !important;
+            border: none !important;
+            transform: none !important;
+        }
+        .pdf-export-mode .glass-card::before {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative font-sans overflow-x-hidden text-slate-600">
+
+    <!-- Luces de fondo (Ambientación) -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-brand-teal blur-[120px] animate-pulse-glow pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[30vw] h-[30vw] rounded-full bg-brand-green blur-[120px] animate-pulse-glow pointer-events-none z-0" style="animation-delay: 3s;"></div>
+
+    <!-- Header con Logo Circular -->
+    <header class="w-full pt-12 pb-6 px-6 relative z-10 flex flex-col items-center justify-center">
+        <!-- Botón de configuración -->
+        <button onclick="toggleConfig()" class="absolute top-6 right-6 p-2 rounded-full bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-brand-teal hover:shadow-md transition-all z-20" title="Configurar API y Modelo">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
+
+        <img src="https://assets.poap.xyz/cec12a20-fefb-4199-9cc0-b1ece87fe44d.png" alt="La Movida de SST Logo" class="h-24 w-24 object-cover rounded-full animate-float drop-shadow-md mb-4 border-2 border-white">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-brand-dark tracking-tight text-center">
+            Auditor Inteligente <span class="text-brand-teal">PSST</span>
+        </h1>
+        <p class="mt-2 text-slate-500 text-center max-w-lg">Sistema de revisión automatizada basado en la NT-04-2023, Guía e Instrumento Oficial del Inpsasel.</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 pb-20 relative z-10">
+        
+        <!-- Zona de Configuración (API KEY y Modelo) -->
+        <div id="configSection" class="glass-card rounded-3xl p-8 md:p-12 text-center mb-8 hidden">
+            <div class="max-w-lg mx-auto">
+                <div class="mb-6">
+                    <svg class="w-12 h-12 text-brand-teal mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-2">Configuración de IA</h2>
+                    <p class="text-sm text-slate-500">Los datos se guardarán localmente en tu navegador. Necesitas una API Key válida para procesar los documentos.</p>
+                </div>
+                
+                <div class="flex flex-col gap-5 text-left">
+                    <div>
+                        <label for="apiKeyInput" class="block text-sm font-semibold text-slate-700 mb-1">Tu API Key de Gemini</label>
+                        <input type="password" id="apiKeyInput" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-teal focus:border-brand-teal outline-none transition-all" placeholder="Ej: AIzaSy...">
+                        <p class="text-xs text-slate-500 mt-2">
+                            ¿No tienes una? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-brand-teal font-bold hover:underline inline-flex items-center gap-1">
+                                Consíguela gratis en Google AI Studio
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </a>
+                        </p>
+                    </div>
+                    <div>
+                        <label for="modelSelect" class="block text-sm font-semibold text-slate-700 mb-1">Modelo de IA</label>
+                        <select id="modelSelect" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-teal focus:border-brand-teal outline-none transition-all bg-white">
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recomendado, Rápido)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Análisis más profundo)</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        </select>
+                    </div>
+
+                    <!-- Tutorial y Explicación de Modelos (Acordeón) -->
+                    <details class="bg-slate-50 border border-slate-200 rounded-xl group overflow-hidden transition-all duration-300">
+                        <summary class="font-semibold text-brand-dark p-4 cursor-pointer list-none flex justify-between items-center outline-none hover:bg-slate-100 transition-colors [&::-webkit-details-marker]:hidden">
+                            <span class="flex items-center gap-2 text-sm">
+                                <svg class="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                ¿Cómo obtener la API y qué modelo elegir?
+                            </span>
+                            <svg class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </summary>
+                        <div class="p-4 pt-0 border-t border-slate-200 mt-2 text-sm text-slate-600 space-y-4">
+                            <div>
+                                <h4 class="font-bold text-brand-teal mb-1">🛠️ Pasos para obtener tu API Key</h4>
+                                <ol class="list-decimal list-inside space-y-1 ml-1 text-slate-600">
+                                    <li>Ingresa a <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-brand-teal font-medium hover:underline">Google AI Studio</a> e inicia sesión con Google.</li>
+                                    <li>Haz clic en el botón <strong>"Get API key"</strong> o <strong>"Create API key"</strong>.</li>
+                                    <li>Selecciona <strong>"Create API key in new project"</strong>.</li>
+                                    <li>Copia la clave generada (suele empezar con <code>AIza...</code>) y pégala arriba.</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-brand-teal mb-1">🤖 Modelos: ¿Gratis o de pago?</h4>
+                                <p class="mb-2 text-slate-600">
+                                    <strong>¡Todos son gratuitos en AI Studio!</strong> Google ofrece una "Capa Gratuita" muy generosa para desarrolladores. No te cobrarán a menos que vincules una tarjeta de crédito en la consola de Google Cloud.
+                                </p>
+                                <ul class="list-disc list-inside space-y-1 ml-1">
+                                    <li><strong>Modelos Flash:</strong> Son rapidísimos y excelentes para leer documentos largos. Tienen un límite gratuito alto (hasta 15 peticiones por minuto). <em>Recomendados para esta app.</em></li>
+                                    <li><strong>Modelos Pro:</strong> Tienen mayor capacidad de razonamiento complejo, pero son un poco más lentos y el límite gratuito es más estricto (solo 2 peticiones por minuto).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </details>
+
+                    <button onclick="saveConfig()" class="mt-2 bg-brand-teal text-white font-bold py-3 px-8 rounded-xl hover:bg-brand-dark transition-colors shadow-lg hover:shadow-xl w-full flex justify-center items-center gap-2">
+                        Guardar y Continuar
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zona de Carga -->
+        <div id="uploadSection" class="glass-card rounded-3xl p-8 md:p-12 text-center mb-8 hidden">
+            <div class="border-2 border-dashed border-brand-teal/30 rounded-2xl p-10 transition-colors hover:border-brand-teal hover:bg-brand-teal/5 flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                <svg class="w-16 h-16 text-brand-teal mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <h3 class="text-xl font-bold text-brand-dark mb-2">Sube el Programa de Seguridad (PSST)</h3>
+                <p class="text-sm text-slate-500 mb-6">Soporta formatos PDF y DOCX. El sistema extraerá el texto automáticamente.</p>
+                <input type="file" id="fileInput" class="hidden" accept=".pdf, .docx">
+                <button class="bg-brand-teal text-white font-bold py-3 px-8 rounded-full hover:bg-brand-dark transition-colors shadow-lg hover:shadow-xl">
+                    Seleccionar Archivo
+                </button>
+            </div>
+            <div id="fileNameDisplay" class="mt-4 text-sm font-medium text-brand-dark hidden"></div>
+        </div>
+
+        <!-- Estado de Carga / Procesamiento -->
+        <div id="loadingSection" class="hidden flex-col items-center justify-center py-12">
+            <div class="w-16 h-16 border-4 border-brand-light border-t-brand-teal rounded-full animate-spin mb-6"></div>
+            <h3 class="text-2xl font-bold text-brand-dark mb-2" id="loadingTitle">Procesando Documento...</h3>
+            <p class="text-slate-500" id="loadingText">Extrayendo texto y aplicando filtros normativos del Inpsasel (NT-04-2023)...</p>
+        </div>
+
+        <!-- Resultados -->
+        <div id="resultsSection" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold text-brand-dark">Reporte de Brechas (Gap Analysis)</h2>
+                <div class="flex gap-2">
+                    <button onclick="document.location.reload()" class="bg-white border border-slate-300 text-slate-700 font-bold py-2 px-6 rounded-full hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+                        Auditar Otro
+                    </button>
+                    <button onclick="downloadPDF()" class="bg-brand-dark text-white font-bold py-2 px-6 rounded-full hover:bg-brand-teal transition-colors shadow-md flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Descargar PDF
+                    </button>
+                </div>
+            </div>
+            
+            <div id="reportContainer" class="glass-card rounded-3xl p-8 md:p-12 markdown-content">
+                <!-- Aquí se inyecta el reporte de la IA -->
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Declaración global para compatibilidad
+        const apiKey = ""; 
+
+        // Variables Globales
+        let extractedText = "";
+        let currentFileName = "";
+
+        // Inicializar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        // --- GESTIÓN DE CONFIGURACIÓN Y LOCALSTORAGE ---
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            initApp();
+        });
+
+        function initApp() {
+            const savedApiKey = localStorage.getItem('psst_api_key');
+            const savedModel = localStorage.getItem('psst_model');
+
+            if (savedApiKey) {
+                document.getElementById('apiKeyInput').value = savedApiKey;
+                if (savedModel) {
+                    document.getElementById('modelSelect').value = savedModel;
+                }
+                // Mostrar directo la zona de carga
+                document.getElementById('configSection').classList.add('hidden');
+                document.getElementById('uploadSection').classList.remove('hidden');
+            } else {
+                // Forzar ingreso de datos
+                document.getElementById('configSection').classList.remove('hidden');
+                document.getElementById('uploadSection').classList.add('hidden');
+            }
+        }
+
+        function saveConfig() {
+            const keyInput = document.getElementById('apiKeyInput').value.trim();
+            const modelInput = document.getElementById('modelSelect').value;
+
+            if (!keyInput) {
+                alert("Por favor, ingresa una API Key válida para continuar.");
+                return;
+            }
+
+            localStorage.setItem('psst_api_key', keyInput);
+            localStorage.setItem('psst_model', modelInput);
+
+            document.getElementById('configSection').classList.add('hidden');
+            document.getElementById('uploadSection').classList.remove('hidden');
+        }
+
+        function toggleConfig() {
+            const configSection = document.getElementById('configSection');
+            const uploadSection = document.getElementById('uploadSection');
+            
+            if (configSection.classList.contains('hidden')) {
+                configSection.classList.remove('hidden');
+                uploadSection.classList.add('hidden');
+                document.getElementById('resultsSection').classList.add('hidden');
+            } else {
+                initApp(); 
+            }
+        }
+
+        // --- MANEJO DE ARCHIVOS ---
+
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        async function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            currentFileName = file.name;
+            document.getElementById('fileNameDisplay').textContent = `Archivo cargado: ${file.name}`;
+            document.getElementById('fileNameDisplay').classList.remove('hidden');
+            
+            showLoading("Extrayendo texto del documento...");
+
+            try {
+                if (file.type === "application/pdf") {
+                    extractedText = await extractTextFromPDF(file);
+                } else if (file.name.endsWith('.docx')) {
+                    extractedText = await extractTextFromDOCX(file);
+                } else {
+                    throw new Error("Formato no soportado. Usa PDF o DOCX.");
+                }
+
+                extractedText = limpiarTexto(extractedText);
+                analyzeDocument(extractedText);
+            } catch (error) {
+                showError("Error al leer el archivo: " + error.message);
+            }
+        }
+
+        function limpiarTexto(texto) {
+            return texto
+                .replace(/\n{3,}/g, '\n\n') 
+                .replace(/Pág(ina)?\s*\d+/gi, '') 
+                .replace(/[^\S\r\n]{2,}/g, ' ') 
+                .trim();
+        }
+
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const strings = content.items.map(item => item.str);
+                text += strings.join(" ") + "\n";
+            }
+            return text;
+        }
+
+        async function extractTextFromDOCX(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+            return result.value;
+        }
+
+        // --- LLAMADA A LA API ---
+        
+        async function analyzeDocument(text) {
+            showLoading("Auditoría en proceso...", "Realizando análisis profundo de la estructura y redacción...");
+
+            const userApiKey = localStorage.getItem('psst_api_key') || apiKey;
+            const selectedModel = localStorage.getItem('psst_model') || 'gemini-2.5-flash';
+            
+            if (!userApiKey) {
+                showError("Falta la API Key. Por favor, haz clic en el engranaje arriba a la derecha para configurarla.");
+                return;
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${userApiKey}`;
+
+            const systemPrompt = `
+Eres un Auditor Técnico Experto y muy riguroso del INPSASEL de Venezuela. Tu trabajo es realizar una auditoría exhaustiva y milimétrica de un Programa de Seguridad y Salud en el Trabajo (PSST).
+Tus bases legales inquebrantables son tres documentos que se complementan:
+1. La Norma Técnica NT-04-2023 (Gaceta Oficial 42.712).
+2. La Guía de Elaboración de los Programas de Seguridad y Salud en el Trabajo.
+3. El Instrumento para la revisión de los PSST (Checklist oficial).
+
+REGLAS DE FORMATO Y ESTILO (CRÍTICO):
+- CERO EMOJIS O COLORES. Este es un informe técnico formal, sobrio y descriptivo.
+- NO uses tablas Markdown para la matriz. Usa texto estructurado, listas y párrafos profundamente descriptivos y analíticos.
+- ENFOQUE DESCRIPTIVO PROFUNDO: No te limites a decir "Cumple" o "No Cumple". Explica el hallazgo detalladamente: QUÉ exige la norma, QUÉ omitió el documento, EN DÓNDE falta y POR QUÉ constituye una brecha legal.
+
+CRITERIOS DE AUDITORÍA ESPECÍFICOS (AMPLIACIÓN EXTREMA BASADA EN NT-04-2023 E INSTRUMENTO):
+Audita todo el documento evaluando los siguientes parámetros de forma estricta:
+
+- TÍTULO I al III (Generalidades, Política y Procesos):
+  * Generalidades: Verifica que exista un glosario o sección de "Definiciones" (Exigido en Cap I del Instrumento).
+  * Política (Art. 15 y 16): Verifica que incluya el compromiso de proveer condiciones seguras, eliminar peligros, la consulta al Comité, recursos financieros. DEBE mencionar textualmente que llevará "fecha y firmas conjuntas del patrono y delegados" y que será "revisada anualmente".
+  * Proceso Productivo (Art. 14): Debe detallar maquinarias, materia prima, desechos, impacto ambiental. Debe evidenciar el Organigrama y el Flujograma.
+  * Procesos Peligrosos: Es OBLIGATORIO evidenciar la validación mediante asamblea con el 50% + 1 de la nómina general. DEBE indicar el "número de trabajadores expuestos por áreas o zonas" (Art. 14.1.5).
+
+- TÍTULO IV (Planes de Trabajo - EVALUACIÓN QUIRÚRGICA ART. 17 Y 18):
+  * PARA CADA PLAN, verifica la estructura exacta del Art. 17 (Numerales 1.1.1 al 1.1.5):
+    1.1.1 Objetivos, metas y alcance.
+    1.1.2 Frecuencia de ejecución.
+    1.1.3 Personal involucrado y responsabilidades.
+    1.1.4 Procedimiento de ejecución.
+    1.1.5 Formularios e instrumentos diseñados y recursos necesarios.
+  * Plan de Educación: Debe exigir "16 horas trimestrales". Debe considerar trabajadores con discapacidad y exigir los "currículos de los facilitadores".
+  * Plan de Inducción: Si hay químicos, DEBE exigir "hojas de datos de seguridad en español".
+  * Plan de Inspecciones: Debe decir explícitamente que los hallazgos se discuten en el Comité en un lapso de "dos (2) días continuos".
+  * Plan de Vigilancia Epidemiológica: Debe mencionar la publicación "mensual" de estadísticas.
+  * Plan de Tiempo Libre: Debe mencionar el monitoreo explícito de "horas extras, horas de alimentación y días de descanso".
+  * Plan de Dotación EPP: Debe señalar explícitamente la "unidad administrativa responsable".
+  * Plan de Ingeniería: Debe exigir la "previa realización del estudio de puesto de trabajo".
+
+- TÍTULO V, VI y VIII (Investigaciones, Cartas y Evaluación):
+  * Investigación: Metodología y participación de los Delegados. DEBE declarar explícitamente que se hace "sin buscar responsabilidades sino hechos".
+  * Cartas Compromiso (Anexos I o II): Audita que tenga LITERLAMENTE los 10 puntos exigidos.
+  * Evaluación del PSST (Art. 26.2 / Cap VIII): Debe indicar que el Comité presentará las actividades de evaluación en su "informe mensual" al INPSASEL.
+
+ESTRUCTURA DE SALIDA OBLIGATORIA:
+
+# INFORME TÉCNICO DE AUDITORÍA PSST
+
+## PARTE 1: ANÁLISIS DETALLADO POR CAPÍTULOS DE LA NORMA TÉCNICA
+(Desglosa cada sección evaluada).
+
+## PARTE 2: PLAN DE ACCIÓN ESPECÍFICO Y CORRECCIONES
+(Solo incluye los elementos que presentaron brechas normativas)
+### [Nombre del Capítulo, Sección o Plan con brecha]
+* **Hallazgo detallado:** [Explicación profunda de la brecha estructural o de contenido].
+* **Acción Requerida:** [Instrucción técnica y precisa sobre lo que debe redactar o anexar].
+* **Base Legal:** [Artículo, numeral exacto de la NT-04-2023].
+`;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Analiza el siguiente texto extraído de un PSST:\n\n${text}` }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                let data = null;
+                for (let i = 0; i < 3; i++) {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) {
+                        data = await response.json();
+                        break;
+                    }
+                    
+                    if(response.status === 400 || response.status === 403 || response.status === 401) {
+                         throw new Error("API Key inválida o modelo no permitido con esta Key. Revisa tu configuración (botón de engranaje).");
+                    }
+
+                    await new Promise(r => setTimeout(r, 2000 * (i + 1))); 
+                }
+
+                if (!data || !data.candidates) throw new Error("Fallo en la conexión con la IA después de varios intentos.");
+
+                const markdownText = data.candidates[0].content.parts[0].text;
+                renderReport(markdownText);
+
+            } catch (error) {
+                showError("Error procesando: " + error.message);
+            }
+        }
+
+        // --- UTILIDADES DE UI ---
+
+        function renderReport(markdown) {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('configSection').style.display = 'none';
+            
+            const resultsSection = document.getElementById('resultsSection');
+            const reportContainer = document.getElementById('reportContainer');
+            
+            reportContainer.innerHTML = marked.parse(markdown);
+            resultsSection.style.display = 'block';
+            resultsSection.classList.remove('hidden');
+        }
+
+        function showLoading(title, text = "") {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('configSection').style.display = 'none';
+            
+            document.getElementById('loadingSection').style.display = 'flex';
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('loadingTitle').textContent = title;
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        function showError(msg) {
+            alert(msg);
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('loadingSection').classList.add('hidden');
+            
+            if(!localStorage.getItem('psst_api_key')) {
+                document.getElementById('configSection').style.display = 'block';
+                document.getElementById('configSection').classList.remove('hidden');
+            } else {
+                document.getElementById('uploadSection').style.display = 'block';
+                document.getElementById('uploadSection').classList.remove('hidden');
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('reportContainer');
+            
+            element.classList.add('pdf-export-mode');
+
+            const safeName = currentFileName ? currentFileName.replace(/\.[^/.]+$/, "") : "Documento";
+            const finalName = `Auditoria_INPSASEL_${safeName}.pdf`;
+
+            const opt = {
+                margin:       15,
+                filename:     finalName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.remove('pdf-export-mode');
+            });
+        }
+    </script>
+</body>
+</html>
