@@ -109,6 +109,27 @@ footer{background:#071c3c;color:#d6e5ef;padding:24px 0;margin-top:28px}.foot{dis
     <section class="card pad config-card">
       <h2 class="section-title">Motor de IA</h2>
       <p class="section-sub">Usa tu propia clave de Gemini. La clave solo se conserva durante esta sesión del navegador.</p>
+
+      <details style="margin-top:12px;border:1px solid var(--line);border-radius:15px;background:#f8fafc;overflow:hidden">
+        <summary style="cursor:pointer;padding:13px 14px;font-size:.78rem;font-weight:900;color:var(--navy);list-style:none">
+          ¿Cómo obtener mi clave API de Gemini?
+        </summary>
+        <div style="padding:0 14px 14px;color:#475569;font-size:.74rem;line-height:1.55">
+          <p style="margin:0 0 9px">La clave se obtiene directamente en <strong>Google AI Studio</strong>. Necesitas iniciar sesión con una cuenta de Google.</p>
+          <ol style="margin:0 0 11px;padding-left:20px">
+            <li>Abre la página oficial de claves de Google AI Studio.</li>
+            <li>Inicia sesión con tu cuenta de Google.</li>
+            <li>Crea una nueva clave o copia una clave existente de Gemini API.</li>
+            <li>Regresa a esta aplicación, pega la clave en <strong>API Key de Gemini</strong> y pulsa <strong>Guardar para esta sesión</strong>.</li>
+          </ol>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <a class="btn primary" href="https://aistudio.google.com/apikey" target="_self">Ir a Google AI Studio</a>
+            <a class="btn secondary" href="https://ai.google.dev/gemini-api/docs/api-key" target="_self">Guía oficial de Google</a>
+          </div>
+          <p style="margin:11px 0 0;color:#7b8ba0;font-size:.68rem">La disponibilidad, cuotas y posibles cargos dependen de tu proyecto y de las condiciones vigentes de Google.</p>
+        </div>
+      </details>
+
       <div class="configline">
         <div class="field"><label for="apiKeyInput">API Key de Gemini</label><input id="apiKeyInput" class="input" type="password" placeholder="Pega tu clave" autocomplete="off"></div>
         <div class="field"><label for="modelSelect">Modelo</label>
