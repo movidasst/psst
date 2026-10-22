@@ -134,15 +134,16 @@ footer{background:#071c3c;color:#d6e5ef;padding:24px 0;margin-top:28px}.foot{dis
         <div class="field"><label for="apiKeyInput">API Key de Gemini</label><input id="apiKeyInput" class="input" type="password" placeholder="Pega tu clave" autocomplete="off"></div>
         <div class="field"><label for="modelSelect">Modelo</label>
           <select id="modelSelect" class="select">
-            <option value="gemini-3.6-flash">Gemini 3.6 Flash · estable</option>
-            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro · máxima profundidad (preview)</option>
-            <option value="gemini-2.5-pro">Gemini 2.5 Pro · estable</option>
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash · estable</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash · recomendado (estable)</option>
+            <option value="gemini-3.6-flash">Gemini 3.6 Flash · alternativa (estable)</option>
+            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite · rápido (estable)</option>
+            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro · profundo (preview / pago)</option>
           </select>
         </div>
       </div>
-      <div class="config-actions"><button id="saveConfigBtn" class="btn primary" type="button">Guardar para esta sesión</button><button id="clearConfigBtn" class="btn secondary" type="button">Borrar clave</button></div>
-      <div id="configMsg" class="msg success"></div>
+      <div class="config-actions"><button id="saveConfigBtn" class="btn primary" type="button">Comprobar modelos y guardar</button><button id="clearConfigBtn" class="btn secondary" type="button">Borrar clave</button></div>
+      <p id="modelStatus" class="section-sub" role="status" aria-live="polite">Introduce tu clave para comprobar los modelos disponibles en tu proyecto de Google.</p>
+      <div id="configMsg" class="msg success" role="status" aria-live="polite"></div>
       <div class="privacy"><strong>Privacidad de Gemini:</strong> el documento se envía directamente a la API de Google usando tu clave. El uso y retención dependen del tipo de servicio/cuenta de Gemini. Evita enviar información personal o confidencial si utilizas cuota no pagada.</div>
     </section>
   </div>
@@ -188,6 +189,19 @@ const sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistS
 const SESSION_MEMBER='psst_member_session_v2';
 const SESSION_API='psst_gemini_key_session_v2';
 const SESSION_MODEL='psst_gemini_model_session_v2';
+const DEFAULT_MODEL='gemini-3.8-flash';
+const GEMINI_CHOICES=[
+  ['gemini-3.8-flash','Gemini 3.8 Flash · recomendado (estable)'],
+  ['gemini-3.6-flash','Gemini 3.6 Flash · alternativa (estable)'],
+  ['gemini-3.5-flash-lite','Gemini 3.5 Flash-Lite · rápido (estable)'],
+  ['gemini-3.1-pro-preview','Gemini 3.1 Pro · profundo (preview / pago)'],
+  ['gemini-2.5-pro','Gemini 2.5 Pro · heredado'],
+  ['gemini-2.5-flash','Gemini 2.5 Flash · heredado']
+];
+let verifiedGeminiKey='';
+let availableGeminiModels=new Set();
+let modelOutputLimits=new Map();
+let modelCheckSequence=0;
 const MAX_FILE=45*1024*1024;
 const $=id=>document.getElementById(id);
 let currentFile=null;
@@ -334,24 +348,153 @@ $('loginForm').addEventListener('submit',async e=>{
   }catch(err){console.error(err);show($('loginError'),'Cédula o código no válidos, o no fue posible conectar.')}
   finally{$('loginBtn').disabled=false}
 });
+
+function renderGeminiOptions(allowed=null,preferred=DEFAULT_MODEL){
+  const choices=GEMINI_CHOICES.filter((choice,i)=>allowed?allowed.has(choice[0]):i<4);
+  const select=$('modelSelect');
+  select.replaceChildren();
+  choices.forEach(([id,label])=>select.add(new Option(label,id)));
+  select.disabled=choices.length===0;
+  const chosen=choices.some(c=>c[0]===preferred)?preferred:
+    (choices.some(c=>c[0]===DEFAULT_MODEL)?DEFAULT_MODEL:choices[0]?.[0]);
+  if(chosen)select.value=chosen;
+}
+function configMessage(msg,error=false){
+  $('configMsg').textContent=msg||'';
+  $('configMsg').className='msg '+(error?'error':'success')+(msg?' show':'');
+}
+function geminiError(status,data){
+  const details=String(data?.error?.message||'').toLowerCase();
+  const code=String(data?.error?.status||'').toLowerCase();
+  const daily=details.includes('per day')||details.includes('daily')||code.includes('quota_exceeded');
+  let message;
+  if(status===400)message=(details.includes('size')||details.includes('limit')||details.includes('token'))
+    ?'La solicitud supera un límite de Gemini. Reduce el documento o revisa sus partes.'
+    :'Google rechazó la solicitud (400). Comprueba el documento y la configuración.';
+  else if(status===401||status===403)message='La clave API no es válida o carece de permisos. Revisa sus restricciones y facturación en Google AI Studio.';
+  else if(status===404)message='El modelo no está disponible para tu clave. Comprueba y selecciona otro modelo.';
+  else if(status===429)message=daily?'Se agotó la cuota diaria de Gemini para este proyecto.':'Se alcanzó el límite temporal de solicitudes de Gemini (429).';
+  else if([500,502,503,504].includes(status))message='Google Gemini presenta una incidencia temporal (HTTP '+status+').';
+  else message='Google Gemini devolvió un error HTTP '+status+'.';
+  const error=new Error(message);
+  error.retryable=[500,502,503,504].includes(status)||(status===429&&!daily);
+  return error;
+}
+async function listModelsFromGoogle(key){
+  const found=[];
+  let token='';
+  for(let page=0;page<10;page++){
+    const url=new URL('https://generativelanguage.googleapis.com/v1beta/models');
+    url.searchParams.set('pageSize','100');
+    if(token)url.searchParams.set('pageToken',token);
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),18000);
+    let response;
+    try{
+      response=await fetch(url.toString(),{
+        headers:{'x-goog-api-key':key},signal:controller.signal
+      });
+    }catch(err){
+      throw new Error(err.name==='AbortError'
+        ?'La comprobación de modelos excedió el tiempo de espera.'
+        :'No se pudo conectar con Google para comprobar los modelos.');
+    }finally{clearTimeout(timeout)}
+    const data=await response.json().catch(()=>null);
+    if(!response.ok)throw geminiError(response.status,data);
+    if(!Array.isArray(data?.models))throw new Error('Google no devolvió una lista válida de modelos.');
+    found.push(...data.models);
+    token=data.nextPageToken||'';
+    if(!token)return found;
+  }
+  throw new Error('No fue posible completar la lista de modelos de Google.');
+}
+async function verifyGemini(key,selected=DEFAULT_MODEL,quiet=false){
+  const current=++modelCheckSequence;
+  $('saveConfigBtn').disabled=true;
+  $('modelStatus').textContent='Comprobando modelos disponibles con Google…';
+  if(!quiet)configMessage('');
+  try{
+    const models=await listModelsFromGoogle(key);
+    if(current!==modelCheckSequence||$('apiKeyInput').value.trim()!==key)return false;
+    const usable=models.filter(m=>m?.name?.startsWith('models/')&&m.supportedGenerationMethods?.includes('generateContent'));
+    const allIds=new Set(usable.map(m=>m.name.slice(7)));
+    const allowed=new Set(GEMINI_CHOICES.map(c=>c[0]).filter(id=>allIds.has(id)));
+    if(!allowed.size)throw new Error('Esta clave no tiene modelos compatibles de auditoría.');
+    verifiedGeminiKey=key;
+    availableGeminiModels=allowed;
+    modelOutputLimits=new Map(usable.map(m=>[m.name.slice(7),Number(m.outputTokenLimit)||0]));
+    renderGeminiOptions(allowed,selected);
+    sessionStorage.setItem(SESSION_API,key);
+    sessionStorage.setItem(SESSION_MODEL,$('modelSelect').value);
+    $('modelStatus').textContent=allowed.size+' modelos compatibles para esta clave (sujetos a las cuotas y facturación de Google).';
+    if(!quiet)configMessage('Clave verificada y configuración guardada durante esta sesión.');
+    return true;
+  }catch(err){
+    if(current===modelCheckSequence){
+      verifiedGeminiKey='';
+      availableGeminiModels=new Set();
+      modelOutputLimits=new Map();
+      $('modelStatus').textContent='No se pudo verificar la disponibilidad de modelos.';
+      configMessage(err.message,true);
+    }
+    throw err;
+  }finally{
+    if(current===modelCheckSequence)$('saveConfigBtn').disabled=false;
+  }
+}
 function openApp(member){
   $('authGate').classList.add('hidden');$('appShell').classList.remove('hidden');
   $('memberName').textContent=[member?.nombres,member?.apellidos].filter(Boolean).join(' ')||'Integrante';
-  const k=sessionStorage.getItem(SESSION_API)||'';const model=sessionStorage.getItem(SESSION_MODEL)||'gemini-3.6-flash';
-  $('apiKeyInput').value=k;
-  if([...$('modelSelect').options].some(o=>o.value===model))$('modelSelect').value=model;
+  const key=sessionStorage.getItem(SESSION_API)||'';
+  const chosen=sessionStorage.getItem(SESSION_MODEL)||DEFAULT_MODEL;
+  $('apiKeyInput').value=key;
+  renderGeminiOptions(null,chosen);
+  if(key)verifyGemini(key,chosen,true).catch(()=>{});
 }
-$('logoutBtn').onclick=()=>{sessionStorage.removeItem(SESSION_MEMBER);sessionStorage.removeItem(SESSION_API);sessionStorage.removeItem(SESSION_MODEL);location.reload()};
-try{const member=JSON.parse(sessionStorage.getItem(SESSION_MEMBER)||'null');if(member?.cedula)openApp(member)}catch{}
-
-$('saveConfigBtn').onclick=()=>{
-  const key=$('apiKeyInput').value.trim(),model=$('modelSelect').value;
-  show($('configMsg'),'');
-  if(!key){$('configMsg').className='msg error show';$('configMsg').textContent='Ingresa una API Key.';return}
-  sessionStorage.setItem(SESSION_API,key);sessionStorage.setItem(SESSION_MODEL,model);
-  $('configMsg').className='msg success show';$('configMsg').textContent='Configuración guardada solo para esta sesión.';
+$('logoutBtn').onclick=()=>{
+  modelCheckSequence++;
+  sessionStorage.removeItem(SESSION_MEMBER);
+  sessionStorage.removeItem(SESSION_API);
+  sessionStorage.removeItem(SESSION_MODEL);
+  location.reload();
 };
-$('clearConfigBtn').onclick=()=>{sessionStorage.removeItem(SESSION_API);sessionStorage.removeItem(SESSION_MODEL);$('apiKeyInput').value='';$('configMsg').className='msg success show';$('configMsg').textContent='Clave eliminada de la sesión.'};
+try{const member=JSON.parse(sessionStorage.getItem(SESSION_MEMBER)||'null');if(member?.cedula)openApp(member)}catch{}
+$('apiKeyInput').addEventListener('input',()=>{
+  if($('apiKeyInput').value.trim()===verifiedGeminiKey)return;
+  modelCheckSequence++;
+  verifiedGeminiKey='';
+  availableGeminiModels=new Set();
+  modelOutputLimits=new Map();
+  const selected=$('modelSelect').value;
+  renderGeminiOptions(null,selected);
+  $('saveConfigBtn').disabled=false;
+  $('modelStatus').textContent='Clave modificada: comprueba los modelos antes de analizar.';
+  configMessage('');
+});
+$('modelSelect').addEventListener('change',()=>{
+  const chosen=$('modelSelect').value;
+  if(verifiedGeminiKey===$('apiKeyInput').value.trim()&&availableGeminiModels.has(chosen)){
+    sessionStorage.setItem(SESSION_MODEL,chosen);
+  }
+});
+$('saveConfigBtn').onclick=async()=>{
+  const key=$('apiKeyInput').value.trim();
+  if(!key){configMessage('Ingresa una clave API de Gemini.',true);return}
+  await verifyGemini(key,$('modelSelect').value).catch(()=>{});
+};
+$('clearConfigBtn').onclick=()=>{
+  modelCheckSequence++;
+  verifiedGeminiKey='';
+  availableGeminiModels=new Set();
+  modelOutputLimits=new Map();
+  sessionStorage.removeItem(SESSION_API);
+  sessionStorage.removeItem(SESSION_MODEL);
+  $('apiKeyInput').value='';
+  renderGeminiOptions();
+  $('saveConfigBtn').disabled=false;
+  $('modelStatus').textContent='Introduce tu clave para comprobar los modelos disponibles en tu proyecto de Google.';
+  configMessage('Clave borrada de esta sesión.');
+};
 
 $('dropZone').onclick=()=>$('fileInput').click();
 $('dropZone').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){$('fileInput').click();e.preventDefault()}});
@@ -401,7 +544,7 @@ function buildPayloadForText(txt){
   return {
     systemInstruction:{parts:[{text:SYSTEM_PROMPT}]},
     contents:[{role:'user',parts:[{text:`Analiza el siguiente texto extraído de un PSST. Evalúa únicamente lo que esté evidenciado en este contenido y aplica las reglas del sistema.\n\n${txt}`}]}],
-    generationConfig:{temperature:0.1,topP:0.9,maxOutputTokens:32768}
+    generationConfig:{maxOutputTokens:32768}
   };
 }
 async function buildPayloadForPdf(file){
@@ -413,51 +556,76 @@ async function buildPayloadForPdf(file){
       {text:'Analiza este PSST completo. Revisa tanto el texto como tablas, diagramas, organigramas, firmas, sellos, anexos y demás evidencia visual que sea legible. No inventes contenido ausente.'},
       {inlineData:{mimeType:'application/pdf',data}}
     ]}],
-    generationConfig:{temperature:0.1,topP:0.9,maxOutputTokens:32768}
+    generationConfig:{maxOutputTokens:32768}
   };
 }
 
+
 async function callGemini(payload,model,key){
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
-  let lastErr=null;
-  for(let attempt=1;attempt<=3;attempt++){
-    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),145000);
-    try{
-      setLoading('Auditoría en proceso…',attempt===1?'Contrastando el PSST con los criterios técnicos y normativos.':`Reintentando conexión (${attempt}/3)…`);
-      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
-      clearTimeout(timer);
-      const raw=await res.text();let data=null;try{data=JSON.parse(raw)}catch{}
-      if(res.ok){
-        if(!data?.candidates?.length)throw new Error('La API no devolvió una respuesta utilizable.');
-        const candidate=data.candidates[0];
-        const parts=candidate?.content?.parts||[];
-        const answer=parts.map(p=>p.text||'').join('\n').trim();
-        if(!answer)throw new Error(`Respuesta vacía de Gemini${candidate?.finishReason?' ('+candidate.finishReason+')':''}.`);
-        return answer;
-      }
-      const msg=data?.error?.message||`HTTP ${res.status}`;
-      if([400,401,403,404].includes(res.status))throw new Error(msg);
-      if(![429,500,502,503,504].includes(res.status))throw new Error(msg);
-      lastErr=new Error(msg);
-    }catch(err){
-      clearTimeout(timer);
-      if(err.name==='AbortError')lastErr=new Error('La solicitud excedió el tiempo de espera.');
-      else lastErr=err;
-      if(attempt===3||/API key|permission|not found|INVALID_ARGUMENT|400|401|403|404/i.test(String(lastErr.message)))break;
-      await new Promise(r=>setTimeout(r,1600*attempt));
-    }
+  const endpoint='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent';
+  const tokenLimit=modelOutputLimits.get(model);
+  if(tokenLimit&&payload.generationConfig){
+    payload.generationConfig.maxOutputTokens=Math.min(payload.generationConfig.maxOutputTokens,tokenLimit);
   }
-  throw lastErr||new Error('No fue posible completar la auditoría.');
+  let error=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),145000);
+    let response;
+    try{
+      setLoading('Auditoría en proceso…',attempt===1
+        ?'Contrastando el PSST con los criterios técnicos y normativos.'
+        :'Reintentando una incidencia temporal de Google ('+attempt+'/3)…');
+      response=await fetch(endpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify(payload),
+        signal:controller.signal
+      });
+    }catch(err){
+      if(err.name==='AbortError')throw new Error('La auditoría excedió el tiempo de espera. Prueba con un documento más pequeño.');
+      error=new Error('No fue posible conectar con Google Gemini. Comprueba tu conexión.');
+      if(attempt===3)throw error;
+      await new Promise(resolve=>setTimeout(resolve,1500*attempt));
+      continue;
+    }finally{clearTimeout(timeout)}
+    const data=await response.json().catch(()=>null);
+    if(response.ok){
+      const candidate=data?.candidates?.[0];
+      if(!candidate)throw new Error('Gemini no devolvió una respuesta utilizable.');
+      if(candidate.finishReason==='MAX_TOKENS'){
+        throw new Error('La respuesta se interrumpió al alcanzar el límite de salida. Divide el PSST en partes para obtener una auditoría completa.');
+      }
+      const answer=(candidate.content?.parts||[]).map(p=>p.text||'').join('\n').trim();
+      if(!answer)throw new Error('Gemini devolvió una respuesta vacía'+(candidate.finishReason?' ('+candidate.finishReason+')':'')+'.');
+      return answer;
+    }
+    error=geminiError(response.status,data);
+    if(!error.retryable||attempt===3)throw error;
+    const retryAfter=response.headers.get('Retry-After');
+    const seconds=retryAfter&&Number.isFinite(Number(retryAfter))?Math.max(0,Number(retryAfter)):0;
+    const delay=Math.min(20000,Math.max(1600*Math.pow(2,attempt-1),seconds*1000));
+    await new Promise(resolve=>setTimeout(resolve,delay));
+  }
+  throw error||new Error('No se pudo completar la auditoría.');
 }
 
 $('analyzeBtn').onclick=async()=>{
   show($('uploadError'),'');resetResults();
-  const key=sessionStorage.getItem(SESSION_API)||$('apiKeyInput').value.trim();
-  const model=sessionStorage.getItem(SESSION_MODEL)||$('modelSelect').value;
+  const key=$('apiKeyInput').value.trim()||sessionStorage.getItem(SESSION_API)||'';
+  let model=$('modelSelect').value;
   if(!key){show($('uploadError'),'Configura primero tu API Key de Gemini.');return}
   if(!currentFile){show($('uploadError'),'Selecciona un PSST.');return}
   $('analyzeBtn').disabled=true;
   try{
+    if(verifiedGeminiKey!==key||!availableGeminiModels.has(model)){
+      const ready=await verifyGemini(key,model,true);
+      if(!ready)throw new Error('Se interrumpió la comprobación de la clave. Intenta nuevamente.');
+      if(!availableGeminiModels.has(model)){
+        throw new Error('El modelo seleccionado no está disponible para tu clave. Elige un modelo verificado y vuelve a analizar.');
+      }
+    }
+    model=$('modelSelect').value;
     let payload;
     if(currentFile.name.toLowerCase().endsWith('.pdf')){
       try{payload=await buildPayloadForPdf(currentFile)}
