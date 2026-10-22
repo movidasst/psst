@@ -612,7 +612,7 @@ async function callGemini(payload,model,key){
 
 $('analyzeBtn').onclick=async()=>{
   show($('uploadError'),'');resetResults();
-  const key=$('apiKeyInput').value.trim()||sessionStorage.getItem(SESSION_API)||'';
+  const key=$('apiKeyInput').value.trim();
   let model=$('modelSelect').value;
   if(!key){show($('uploadError'),'Configura primero tu API Key de Gemini.');return}
   if(!currentFile){show($('uploadError'),'Selecciona un PSST.');return}
