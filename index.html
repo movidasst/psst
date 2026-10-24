@@ -157,6 +157,7 @@ footer{background:#071c3c;color:#d6e5ef;padding:24px 0;margin-top:28px}.foot{dis
     </div>
     <div id="fileLine" class="fileline hidden"><strong id="fileName">—</strong><span id="fileMeta"></span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px"><button id="analyzeBtn" class="btn primary" type="button" disabled>Analizar PSST</button><button id="removeFileBtn" class="btn secondary hidden" type="button">Quitar archivo</button></div>
+    <label style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:13px 14px;border:1px solid #c7e5e5;border-radius:12px;background:#f0faf9;color:#00205b;line-height:1.5;font-size:.81rem"><input id="confirmExternalAi" type="checkbox" style="width:20px;height:20px;flex:0 0 20px;margin-top:1px;accent-color:#007b85"><span>Confirmo que tengo autorización para enviar este documento a la API de Google Gemini, que revisé su contenido y que retiré los datos personales o confidenciales que no sean necesarios para el análisis. <a href="https://registro.movidasst.com/privacidad.html" target="_blank" rel="noopener noreferrer" style="color:#007b85;text-decoration:underline">Aviso de privacidad ↗</a></span></label>
     <div id="uploadError" class="msg error"></div>
   </section>
 
@@ -507,12 +508,12 @@ function selectFile(file){
   const ext=(file.name.split('.').pop()||'').toLowerCase();
   if(!['pdf','docx'].includes(ext)){show($('uploadError'),'Solo se admiten archivos PDF o DOCX.');return}
   if(file.size>MAX_FILE){show($('uploadError'),'El archivo supera el máximo de 45 MB configurado para esta aplicación.');return}
-  currentFile=file;currentFileName=file.name;
+  currentFile=file;currentFileName=file.name;$('confirmExternalAi').checked=false;
   $('fileName').textContent=file.name;$('fileMeta').textContent=humanBytes(file.size)+' · '+ext.toUpperCase();
   $('fileLine').classList.remove('hidden');$('removeFileBtn').classList.remove('hidden');$('analyzeBtn').disabled=false;
 }
-$('removeFileBtn').onclick=()=>{currentFile=null;currentFileName='';$('fileInput').value='';$('fileLine').classList.add('hidden');$('removeFileBtn').classList.add('hidden');$('analyzeBtn').disabled=true;resetResults()};
-$('newBtn').onclick=()=>{currentFile=null;currentFileName='';$('fileInput').value='';$('fileLine').classList.add('hidden');$('removeFileBtn').classList.add('hidden');$('analyzeBtn').disabled=true;resetResults();window.scrollTo({top:0,behavior:'smooth'})};
+$('removeFileBtn').onclick=()=>{$('confirmExternalAi').checked=false;currentFile=null;currentFileName='';$('fileInput').value='';$('fileLine').classList.add('hidden');$('removeFileBtn').classList.add('hidden');$('analyzeBtn').disabled=true;resetResults()};
+$('newBtn').onclick=()=>{$('confirmExternalAi').checked=false;currentFile=null;currentFileName='';$('fileInput').value='';$('fileLine').classList.add('hidden');$('removeFileBtn').classList.add('hidden');$('analyzeBtn').disabled=true;resetResults();window.scrollTo({top:0,behavior:'smooth'})};
 
 function arrayBufferToBase64(buffer){
   const bytes=new Uint8Array(buffer);let binary='';const chunk=0x8000;
@@ -616,6 +617,7 @@ $('analyzeBtn').onclick=async()=>{
   let model=$('modelSelect').value;
   if(!key){show($('uploadError'),'Configura primero tu API Key de Gemini.');return}
   if(!currentFile){show($('uploadError'),'Selecciona un PSST.');return}
+  if(!$('confirmExternalAi').checked){show($('uploadError'),'Confirma que tienes autorización para enviar este documento a Google Gemini antes de analizarlo.');$('confirmExternalAi').focus();return}
   $('analyzeBtn').disabled=true;
   try{
     if(verifiedGeminiKey!==key||!availableGeminiModels.has(model)){
